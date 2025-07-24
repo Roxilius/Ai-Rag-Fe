@@ -1,7 +1,11 @@
-import ChatPage from "./pages/ChatPage";
+import { Outlet } from "react-router-dom";
 
 const App: React.FC = () => {
-  return <ChatPage />;
+  return (
+    <>
+      <Outlet/>
+    </>
+  );
 };
 
 export default App

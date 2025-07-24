@@ -1,18 +1,4 @@
-type Data = {
-  question: string;
-  answer: string;
-};
-
-type Response = {
-  success: boolean;
-  message: string;
-  data: Data;
-};
-
-type AskAIParams = {
-  userId: string;
-  question: string;
-};
+import type { AskAIParams, Response } from "../utils/types";
 
 export const askAI = async ({ userId, question }: AskAIParams): Promise<Response> => {
   const res = await fetch("/ask", {
