@@ -22,7 +22,6 @@ const ChatPage: React.FC = () => {
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
-  // Ambil user dari cookie
   const userCookie = Cookies.get("user");
   const user: FirebaseUser | null = userCookie ? JSON.parse(userCookie) : null;
 
