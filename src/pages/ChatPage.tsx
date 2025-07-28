@@ -151,13 +151,13 @@ const ChatPage: React.FC = () => {
       <div className="flex flex-1 overflow-hidden">
         <div className="flex flex-col flex-1 overflow-y-auto bg-white p-2 sm:p-4">
           {messages.map((m) => (
-            <ChatMessage key={m.id} message={m.content} sender={m.sender} />
+            <ChatMessage key={m.id} message={m.content} sender={m.sender} image={userDetail?.picture} />
           ))}
 
           {isTyping && <TypingIndicator />}
 
           {currentAiMessage !== "" && (
-            <ChatMessage message={currentAiMessage} sender="ai" />
+            <ChatMessage message={currentAiMessage} sender="ai" image="" />
           )}
           <div ref={chatEndRef} />
         </div>

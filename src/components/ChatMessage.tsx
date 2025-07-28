@@ -1,4 +1,4 @@
-import { CircleUserRound } from "lucide-react";
+// import { CircleUserRound } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -6,9 +6,10 @@ import rehypeHighlight from "rehype-highlight";
 type ChatMessageProps = {
   message: string;
   sender: "user" | "ai";
+  image: string | undefined
 };
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, sender }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, sender, image}) => {
   const isUser = sender === "user";
 
   return (
@@ -41,7 +42,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, sender }) => {
       </div>
 
       {isUser && (
-        <CircleUserRound className="w-8 h-8 ml-2 text-white bg-gray-800 p-1 rounded-full border shrink-0" />
+        <img
+          src={image}
+          alt="AI"
+          className="w-8 h-8 ml-2 rounded-full border shrink-0"
+        />
       )}
     </div>
   );
