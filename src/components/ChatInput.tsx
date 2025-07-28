@@ -29,7 +29,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
         ref={textareaRef}
         rows={1}
         className="text-base flex-1 w-full resize-none overflow-hidden px-3 py-2 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#ED1C24] max-h-40 leading-relaxed"
-        style={{ fontSize: "16px" }} // mencegah zoom di iOS
+        style={{ fontSize: "16px" }}
         placeholder="Tanya AI..."
         value={text}
         onChange={(e) => setText(e.target.value)}
