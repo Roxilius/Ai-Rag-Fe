@@ -1,18 +1,54 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
-import { handleLogin } from "../services/LoginService";
-import { provider } from "../utils/firebase";
+import { useNavigate } from "react-router-dom";
+import { verifLogin } from "../api/api";
+
+// Gunakan type declaration dari src/types/google.d.ts
+interface GoogleCredentialResponse {
+  credential: string;
+  select_by: string;
+}
 
 const LoginPage: React.FC = () => {
+  const [sdkReady, setSdkReady] = useState(false);
   const navigate = useNavigate();
+  const handleCredentialResponse = async (
+    response: GoogleCredentialResponse
+  ) => {
+    const id_token = response.credential;
+    if (!id_token) {
+      console.error("No ID token received.");
+      return;
+    }
+    await verifLogin(navigate, id_token);
+  };
 
   useEffect(() => {
     Cookies.remove("token");
     Cookies.remove("user");
-  }, []);
+
+    const interval = setInterval(() => {
+      if (window.google?.accounts?.id && !window.gsiInitialized) {
+        window.google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          callback: handleCredentialResponse,
+          ux_mode: "popup",
+        });
+        window.gsiInitialized = true;
+        setSdkReady(true);
+        clearInterval(interval);
+      }
+    }, 300);
+
+    return () => clearInterval(interval);
+  },);
+
+  const handleLoginClick = () => {
+    if (!sdkReady) return console.warn("GSI SDK belum siap");
+    window.google?.accounts.id.prompt();
+  };
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-gray-100 px-4">
@@ -50,10 +86,10 @@ const LoginPage: React.FC = () => {
         </motion.p>
 
         <motion.button
-          onClick={()=> handleLogin(navigate, provider)}
+          onClick={handleLoginClick}
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.98 }}
-          className="flex items-center justify-center gap-3 bg-[#C8102E] hover:bg-red-700 text-white font-medium py-2.5 px-4 rounded-lg transition duration-300 w-full text-sm sm:text-base"
+          className="googleBtn flex items-center justify-center gap-3 bg-[#C8102E] hover:bg-red-700 text-white font-medium py-2.5 px-4 rounded-lg transition duration-300 w-full text-sm sm:text-base"
         >
           <FcGoogle size={22} />
           Login with Google

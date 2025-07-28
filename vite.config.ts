@@ -5,13 +5,8 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    proxy: {
-      "/ask": {
-        target: "https://d2c8b0fee769.ngrok-free.app",
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/ask/, "/ask"),
-      },
-    },
+    allowedHosts: ['6b45b2e7bce8.ngrok-free.app'],
+    port: 5173,
+    cors: true,
   },
 });

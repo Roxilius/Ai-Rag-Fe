@@ -2,16 +2,19 @@ import { useEffect, useRef, useState } from "react";
 import ChatMessage from "../components/ChatMessage";
 import TypingIndicator from "../components/TypingIndicator";
 import ChatInput from "../components/ChatInput";
-import { askAI } from "../services/ChatService";
+import { askAI, getUserInfo, handleLogout } from "../api/api";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
-import { handleLogout } from "../services/LoginService";
 import type { Message } from "../utils/types";
 
-interface FirebaseUser {
-  displayName: string;
+interface User {
+  userId: string;
+  picture: string;
   email: string;
-  photoURL: string;
+  name: string;
+  iat: number;
+  exp: number;
+  role: string;
 }
 
 const ChatPage: React.FC = () => {
@@ -22,8 +25,8 @@ const ChatPage: React.FC = () => {
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
-  const userCookie = Cookies.get("user");
-  const user: FirebaseUser | null = userCookie ? JSON.parse(userCookie) : null;
+  const token = Cookies.get("token");
+  const [user, setUser] = useState<User | null>(null);
 
   const simulateTyping = async (text: string) => {
     setIsTyping(false);
@@ -32,18 +35,24 @@ const ChatPage: React.FC = () => {
       setCurrentAiMessage(text.slice(0, i + 1));
       await new Promise((r) => setTimeout(r, 15));
     }
-    setMessages((prev) => [...prev, { id: crypto.randomUUID(), sender: "ai", content: text }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), sender: "ai", content: text },
+    ]);
     setCurrentAiMessage("");
     setIsTyping(false);
   };
 
   const handleSend = async (message: string) => {
-    setMessages((prev) => [...prev, { id: crypto.randomUUID(), sender: "user", content: message }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), sender: "user", content: message },
+    ]);
     setIsTyping(true);
     setCurrentAiMessage("");
     try {
       const { success, data } = await askAI({
-        userId: user?.email || 'default',
+        userId: user?.userId || "default",
         question: message,
       });
       const full = success
@@ -67,6 +76,26 @@ const ChatPage: React.FC = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, currentAiMessage, isTyping]);
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!token) {
+        navigate("/");
+        return;
+      }
+
+      const userData = await getUserInfo();
+
+      if (!userData) {
+        Cookies.remove("token");
+        navigate("/");
+      } else {
+        setUser(userData);
+      }
+    };
+
+    fetchUser();
+  }, [token, navigate]);
+
   return (
     <div className="flex flex-col h-screen w-full bg-[#1F1F1F]">
       {/* Header */}
@@ -85,7 +114,7 @@ const ChatPage: React.FC = () => {
               className="p-0 border-none bg-transparent"
             >
               <img
-                src={user.photoURL}
+                src={user.picture}
                 alt="User"
                 className="w-8 h-8 rounded-full cursor-pointer border-2 border-white hover:scale-105 transition"
               />
@@ -97,17 +126,17 @@ const ChatPage: React.FC = () => {
             <div className="absolute top-12 right-0 bg-white text-black rounded-lg shadow-lg p-4 z-50 w-60">
               <div className="flex items-center gap-3 mb-4">
                 <img
-                  src={user?.photoURL}
+                  src={user?.picture}
                   alt="User"
                   className="w-10 h-10 rounded-full"
                 />
                 <div>
-                  <p className="text-sm font-medium">{user?.displayName}</p>
+                  <p className="text-sm font-medium">{user?.name}</p>
                   <p className="text-xs text-gray-500">{user?.email}</p>
                 </div>
               </div>
               <button
-                onClick={()=> handleLogout(navigate)}
+                onClick={() => handleLogout(navigate)}
                 className="w-full bg-[#ED1C24] hover:bg-red-700 text-white text-sm py-2 rounded-md"
               >
                 Logout
