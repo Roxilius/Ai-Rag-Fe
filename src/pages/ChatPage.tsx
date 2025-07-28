@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import ChatMessage from "../components/ChatMessage";
 import TypingIndicator from "../components/TypingIndicator";
 import ChatInput from "../components/ChatInput";
-import { askAI, getUserInfo, handleLogout } from "../api/api";
+import { askAI, handleLogout } from "../api/api";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import type { Message } from "../utils/types";
@@ -25,8 +25,7 @@ const ChatPage: React.FC = () => {
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
-  const token = Cookies.get("token");
-  const [user, setUser] = useState<User | null>(null);
+  const [userDetail, setUserDetail] = useState<User | null>(null);
 
   const simulateTyping = async (text: string) => {
     setIsTyping(false);
@@ -52,7 +51,7 @@ const ChatPage: React.FC = () => {
     setCurrentAiMessage("");
     try {
       const { success, data } = await askAI({
-        userId: user?.userId || "default",
+        userId: userDetail?.userId || "default",
         question: message,
       });
       const full = success
@@ -77,24 +76,26 @@ const ChatPage: React.FC = () => {
   }, [messages, currentAiMessage, isTyping]);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      if (!token) {
-        navigate("/");
-        return;
-      }
+    const token = Cookies.get("token");
+    const user = Cookies.get("user");
 
-      const userData = await getUserInfo();
+    if (!token || !user) {
+      Cookies.remove("token");
+      Cookies.remove("user");
+      navigate("/");
+      return;
+    }
 
-      if (!userData) {
-        Cookies.remove("token");
-        navigate("/");
-      } else {
-        setUser(userData);
-      }
-    };
-
-    fetchUser();
-  }, [token, navigate]);
+    try {
+      const parsedUser = JSON.parse(user);
+      setUserDetail(parsedUser);
+    } catch (err) {
+      console.error("Gagal parsing user dari cookie:", err);
+      Cookies.remove("token");
+      Cookies.remove("user");
+      navigate("/");
+    }
+  }, [navigate]);
 
   return (
     <div className="flex flex-col h-screen w-full bg-[#1F1F1F]">
@@ -108,13 +109,13 @@ const ChatPage: React.FC = () => {
 
         {/* Right (avatar & dropdown) */}
         <div className="w-10 sm:w-20 flex justify-end relative">
-          {user && (
+          {userDetail && (
             <button
               onClick={() => setShowDropdown((prev) => !prev)}
               className="p-0 border-none bg-transparent"
             >
               <img
-                src={user.picture}
+                src={userDetail?.picture}
                 alt="User"
                 className="w-8 h-8 rounded-full cursor-pointer border-2 border-white hover:scale-105 transition"
               />
@@ -126,13 +127,13 @@ const ChatPage: React.FC = () => {
             <div className="absolute top-12 right-0 bg-white text-black rounded-lg shadow-lg p-4 z-50 w-60">
               <div className="flex items-center gap-3 mb-4">
                 <img
-                  src={user?.picture}
+                  src={userDetail?.picture}
                   alt="User"
                   className="w-10 h-10 rounded-full"
                 />
                 <div>
-                  <p className="text-sm font-medium">{user?.name}</p>
-                  <p className="text-xs text-gray-500">{user?.email}</p>
+                  <p className="text-sm font-medium">{userDetail?.name}</p>
+                  <p className="text-xs text-gray-500">{userDetail?.email}</p>
                 </div>
               </div>
               <button

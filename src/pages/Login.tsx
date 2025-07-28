@@ -27,7 +27,6 @@ const LoginPage: React.FC = () => {
 
   useEffect(() => {
     Cookies.remove("token");
-    Cookies.remove("user");
 
     const interval = setInterval(() => {
       if (window.google?.accounts?.id && !window.gsiInitialized) {
@@ -43,7 +42,7 @@ const LoginPage: React.FC = () => {
     }, 300);
 
     return () => clearInterval(interval);
-  },);
+  });
 
   const handleLoginClick = () => {
     if (!sdkReady) return console.warn("GSI SDK belum siap");
@@ -52,6 +51,7 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-gray-100 px-4">
+      <script src="https://accounts.google.com/gsi/client" async defer></script>
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
