@@ -1,4 +1,3 @@
-// import { CircleUserRound } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -6,14 +5,22 @@ import rehypeHighlight from "rehype-highlight";
 type ChatMessageProps = {
   message: string;
   sender: "user" | "ai";
-  image: string | undefined
+  image: string | undefined;
 };
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, sender, image}) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({
+  message,
+  sender,
+  image,
+}) => {
   const isUser = sender === "user";
 
   return (
-    <div className={`flex items-end mb-4 px-2 md:px-4 ${isUser ? "justify-end" : "justify-start"}`}>
+    <div
+      className={`flex mb-3 px-2 md:px-4 ${
+        isUser ? "justify-end" : "justify-start"
+      }`}
+    >
       {!isUser && (
         <img
           src="https://career.idstar.co.id/assets/LogoIDstar-BoBpLUi5.png"
@@ -24,19 +31,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, sender, image}) => {
 
       <div
         className={`
-          relative px-4 py-3 rounded-lg shadow
-          text-sm sm:text-base whitespace-pre-wrap break-words overflow-x-auto
-          max-w-[90%] sm:max-w-[75%] md:max-w-[65%] lg:max-w-[60%] xl:max-w-[55%]
-          ${isUser
-            ? "bg-[#ED1C24] text-white rounded-br-none"
-            : "bg-gray-200 text-black rounded-bl-none"
+          relative px-4 py-2 rounded-2xl text-sm whitespace-pre-wrap break-words overflow-x-auto shadow-sm
+          max-w-[85%] sm:max-w-[75%] md:max-w-[65%] lg:max-w-[55%]
+          ${
+            isUser
+              ? "bg-[#ED1C24] text-white rounded-br-none"
+              : "bg-[#F1F0F0] text-black rounded-bl-none"
           }
-         `}
+        `}
       >
-        <Markdown
-          rehypePlugins={[rehypeHighlight]}
-          remarkPlugins={[remarkGfm]}
-        >
+        <Markdown rehypePlugins={[rehypeHighlight]} remarkPlugins={[remarkGfm]}>
           {message}
         </Markdown>
       </div>
@@ -44,7 +48,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, sender, image}) => {
       {isUser && (
         <img
           src={image}
-          alt="AI"
+          alt="User"
           className="w-8 h-8 ml-2 rounded-full border shrink-0"
         />
       )}

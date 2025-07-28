@@ -22,7 +22,8 @@ const ChatPage: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [currentAiMessage, setCurrentAiMessage] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement | null>(null);
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
+
   const navigate = useNavigate();
 
   const [userDetail, setUserDetail] = useState<User | null>(null);
@@ -72,10 +73,6 @@ const ChatPage: React.FC = () => {
   };
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, currentAiMessage, isTyping]);
-
-  useEffect(() => {
     const token = Cookies.get("token");
     const user = Cookies.get("user");
 
@@ -100,7 +97,7 @@ const ChatPage: React.FC = () => {
   return (
     <div className="flex flex-col h-screen w-full bg-[#1F1F1F]">
       {/* Header */}
-      <div className="flex items-center justify-between bg-[#ED1C24] text-white text-xl font-semibold p-4 shadow relative">
+      <div className="flex items-center justify-between bg-[#ED1C24] text-white text-xl font-semibold p-2 shadow sticky top-0 z-50">
         {/* Left (empty space) */}
         <div className="w-10 sm:w-20" />
 
@@ -148,23 +145,28 @@ const ChatPage: React.FC = () => {
       </div>
 
       {/* Chat Area */}
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex flex-col flex-1 overflow-y-auto bg-white p-2 sm:p-4">
-          {messages.map((m) => (
-            <ChatMessage key={m.id} message={m.content} sender={m.sender} image={userDetail?.picture} />
-          ))}
+      <div
+        ref={chatContainerRef}
+        className="flex flex-col-reverse flex-1 overflow-y-auto bg-white px-2 py-4 sm:px-4 gap-3"
+      >
+        {isTyping && <TypingIndicator />}
 
-          {isTyping && <TypingIndicator />}
+        {currentAiMessage !== "" && (
+          <ChatMessage message={currentAiMessage} sender="ai" image="" />
+        )}
 
-          {currentAiMessage !== "" && (
-            <ChatMessage message={currentAiMessage} sender="ai" image="" />
-          )}
-          <div ref={chatEndRef} />
-        </div>
+        {[...messages].reverse().map((m) => (
+          <ChatMessage
+            key={m.id}
+            message={m.content}
+            sender={m.sender}
+            image={userDetail?.picture}
+          />
+        ))}
       </div>
 
       {/* Input Area */}
-      <div className="bg-white border-t p-2 sm:p-4">
+      <div className="bg-white border-t p-2 sm:p-4 sticky bottom-0">
         <ChatInput onSend={handleSend} />
       </div>
     </div>
