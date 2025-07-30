@@ -4,8 +4,11 @@ import type { JSX } from "react";
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const token = Cookies.get("token");
+  const user = Cookies.get("user");
 
-  if (!token) {
+  if (!token || !user) {
+    Cookies.remove("token");
+    Cookies.remove("user");
     return <Navigate to="/" replace />;
   }
 

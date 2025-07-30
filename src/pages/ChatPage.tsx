@@ -2,31 +2,22 @@ import { useEffect, useRef, useState } from "react";
 import ChatMessage from "../components/ChatMessage";
 import TypingIndicator from "../components/TypingIndicator";
 import ChatInput from "../components/ChatInput";
-import { askAI, handleLogout } from "../api/api";
+import { askAI, deleteIndexing, handleLogout, uploadFile } from "../api/api";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
-import type { Message } from "../utils/types";
-
-interface User {
-  userId: string;
-  picture: string;
-  email: string;
-  name: string;
-  iat: number;
-  exp: number;
-  role: string;
-}
+import type { Message, User } from "../utils/types";
+import UploadModal from "../components/UploadModal";
 
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [currentAiMessage, setCurrentAiMessage] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
-  const chatContainerRef = useRef<HTMLDivElement | null>(null);
-
-  const navigate = useNavigate();
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [userDetail, setUserDetail] = useState<User | null>(null);
+  
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
+  const navigate = useNavigate();
 
   const simulateTyping = async (text: string) => {
     setIsTyping(false);
@@ -73,26 +64,27 @@ const ChatPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const token = Cookies.get("token");
     const user = Cookies.get("user");
-
-    if (!token || !user) {
-      Cookies.remove("token");
-      Cookies.remove("user");
-      navigate("/");
+    if (!user) {
       return;
     }
-
     try {
       const parsedUser = JSON.parse(user);
       setUserDetail(parsedUser);
     } catch (err) {
       console.error("Gagal parsing user dari cookie:", err);
-      Cookies.remove("token");
       Cookies.remove("user");
       navigate("/");
     }
   }, [navigate]);
+
+  const handleUpload = (files: File[]) => {
+    uploadFile(files);
+  };
+
+  const handleDeleteIndexing = () => {
+    deleteIndexing();
+  };
 
   return (
     <div className="flex flex-col h-screen w-full bg-[#1F1F1F]">
@@ -133,12 +125,33 @@ const ChatPage: React.FC = () => {
                   <p className="text-xs text-gray-500">{userDetail?.email}</p>
                 </div>
               </div>
-              <button
-                onClick={() => handleLogout(navigate)}
-                className="w-full bg-[#ED1C24] hover:bg-red-700 text-white text-sm py-2 rounded-md"
-              >
-                Logout
-              </button>
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                {userDetail?.role === "admin" && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setIsModalOpen(true);
+                        setShowDropdown(false);
+                      }}
+                      className="w-full bg-[#ED1C24] hover:bg-red-700 text-white text-sm py-2 rounded-md"
+                    >
+                      Open Upload Modal
+                    </button>
+                    <button
+                      onClick={() => handleDeleteIndexing()}
+                      className="w-full bg-[#ED1C24] hover:bg-red-700 text-white text-sm py-2 rounded-md"
+                    >
+                      Delete Indexing File
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={() => handleLogout(navigate)}
+                  className="w-full bg-[#ED1C24] hover:bg-red-700 text-white text-sm py-2 rounded-md"
+                >
+                  Logout
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -169,6 +182,13 @@ const ChatPage: React.FC = () => {
       <div className="bg-white border-t p-2 sm:p-4 sticky bottom-0">
         <ChatInput onSend={handleSend} />
       </div>
+
+      {/* Upload Modal */}
+      <UploadModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onUpload={handleUpload}
+      />
     </div>
   );
 };

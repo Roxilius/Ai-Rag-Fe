@@ -1,20 +1,26 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 import type { AskAIParams, Response } from "../utils/types";
 import Cookies from "js-cookie";
 import type { NavigateFunction } from "react-router-dom";
+import toast from "react-hot-toast";
 
-// Inisialisasi Axios
 export const api = axios.create({
   baseURL: import.meta.env.VITE_BASE_URL,
   withCredentials: true,
 });
 
-// Fungsi bertanya ke AI
-export const askAI = async ({ userId, question }: AskAIParams): Promise<Response> => {
-  try {
-    const token = Cookies.get("token");
-    if (!token) throw new Error("Token not found");
+export const askAI = async ({
+  userId,
+  question,
+}: AskAIParams): Promise<Response> => {
+  const token = Cookies.get("token");
+  if (!token) {
+    toast.error("Token tidak ditemukan. Silakan login kembali.");
+    throw new Error("Token not found");
+  }
 
+  try {
     const res = await api.post(
       "/ask",
       { userId, question },
@@ -27,16 +33,19 @@ export const askAI = async ({ userId, question }: AskAIParams): Promise<Response
     );
 
     return res.data as Response;
-  } catch (error) {
+  } catch (error: any) {
+    const msg = error?.response?.data?.message || "Gagal mengambil respons AI.";
+    toast.error(msg);
     console.error("Failed to fetch AI response:", error);
-    throw new Error("Failed to fetch AI response");
+    throw new Error(msg);
   }
 };
 
-// Verifikasi Login Google
-export const verifLogin = async (navigate: NavigateFunction, idToken: string) => {
+export const verifLogin = async (
+  navigate: NavigateFunction,
+  idToken: string
+) => {
   try {
-    console.log(`ID Token : ${idToken}`);
     const res = await api.post(
       "/auth/google",
       { idToken },
@@ -46,23 +55,76 @@ export const verifLogin = async (navigate: NavigateFunction, idToken: string) =>
     );
 
     const { success, data, message } = res.data;
+
     if (success && data?.token && data?.user) {
       Cookies.set("token", data.token);
-      console.log(`Token : ${data.token}`);
       Cookies.set("user", JSON.stringify(data.user));
-      console.log(data.user)
+      toast.success("Login berhasil!");
       navigate("/chat");
     } else {
+      toast.error(message || "Login gagal.");
       console.error("Login gagal:", message);
     }
-  } catch (err) {
+  } catch (err: any) {
+    const msg = err?.response?.data?.message || "Terjadi kesalahan saat login.";
+    toast.error(msg);
     console.error("Login error:", err);
   }
 };
 
-// Logout
 export const handleLogout = (navigate: NavigateFunction) => {
   Cookies.remove("token");
   Cookies.remove("user");
+  toast("Logout berhasil", { icon: "👋" });
   navigate("/");
+};
+
+export const uploadFile = async (files: File[]) => {
+  const token = Cookies.get("token");
+  if (!token) {
+    toast.error("Token tidak ditemukan. Silakan login kembali.");
+    throw new Error("Token not found");
+  }
+
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append("file", file);
+  });
+
+  try {
+    const res = await api.post("/upload", formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    toast.success(res.data?.message || "Berhasil mengunggah file.");
+  } catch (error: any) {
+    const msg = error?.response?.data?.message || "Gagal mengunggah file.";
+    toast.error(msg);
+    console.error("Gagal mengunggah file:", error);
+    throw new Error(msg);
+  }
+};
+
+export const deleteIndexing = async () => {
+  const token = Cookies.get("token");
+  if (!token) {
+    toast.error("Token tidak ditemukan. Silakan login kembali.");
+    throw new Error("Token not found");
+  }
+
+  try {
+    const res = await api.delete("/collections", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    toast.success(res.data?.message || "File berhasil dihapus.");
+  } catch (error: any) {
+    const msg = error?.response?.data?.message || "Gagal menghapus file.";
+    toast.error(msg);
+    console.error("Gagal menghapus file:", error);
+    throw new Error(msg);
+  }
 };

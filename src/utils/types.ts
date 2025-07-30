@@ -19,3 +19,13 @@ export type AskAIParams = {
   userId: string;
   question: string;
 };
+
+export type User = {
+  userId: string;
+  picture: string;
+  email: string;
+  name: string;
+  iat: number;
+  exp: number;
+  role: string;
+}
