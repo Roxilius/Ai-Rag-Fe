@@ -1,12 +1,32 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useRef, useState } from "react";
 import ChatMessage from "../components/ChatMessage";
 import TypingIndicator from "../components/TypingIndicator";
 import ChatInput from "../components/ChatInput";
-import { askAI, deleteIndexing, handleLogout, uploadFile } from "../api/api";
+import { askAI, deleteFile, handleLogout, indexingFiles, uploadFile } from "../api/api";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
-import type { Message, User } from "../utils/types";
+import type { FileType, Message, User } from "../utils/types";
 import UploadModal from "../components/UploadModal";
+
+const beFile = [
+  {
+    "id": "9a20b982-d505-4a4e-b3b6-cb585a89d38f",
+    "filename": "1754560220194_PRA UTS DETING BETA (1).pdf",
+    "filepath": "uploads/1754560220194_PRA UTS DETING BETA (1).pdf",
+    "indexed": false,
+    "createdAt": "2025-08-07T09:50:21.104Z",
+    "updatedAt": "2025-08-07T09:50:21.104Z"
+  },
+  {
+    "id": "5af4a257-db47-4c6d-9ca3-99bcf09f6fab",
+    "filename": "1754559532887_RAG NodeJS.postman_collection.json",
+    "filepath": "uploads/1754559532887_RAG NodeJS.postman_collection.json",
+    "indexed": true,
+    "createdAt": "2025-08-07T09:38:52.975Z",
+    "updatedAt": "2025-08-07T09:48:25.348Z"
+  }
+]
 
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -15,7 +35,7 @@ const ChatPage: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userDetail, setUserDetail] = useState<User | null>(null);
-  
+  const [serverFiles, setServerFiles] = useState<FileType[]>(beFile);
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
@@ -82,10 +102,6 @@ const ChatPage: React.FC = () => {
     uploadFile(files);
   };
 
-  const handleDeleteIndexing = () => {
-    deleteIndexing();
-  };
-
   return (
     <div className="flex flex-col h-screen w-full bg-[#1F1F1F]">
       {/* Header */}
@@ -135,13 +151,7 @@ const ChatPage: React.FC = () => {
                       }}
                       className="w-full bg-[#ED1C24] hover:bg-red-700 text-white text-sm py-2 rounded-md"
                     >
-                      Open Upload Modal
-                    </button>
-                    <button
-                      onClick={() => handleDeleteIndexing()}
-                      className="w-full bg-[#ED1C24] hover:bg-red-700 text-white text-sm py-2 rounded-md"
-                    >
-                      Delete Indexing File
+                      File Handlder
                     </button>
                   </>
                 )}
@@ -183,11 +193,18 @@ const ChatPage: React.FC = () => {
         <ChatInput onSend={handleSend} />
       </div>
 
-      {/* Upload Modal */}
+      {/* File Handler Modal */}
       <UploadModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onUpload={handleUpload}
+        onIndexing={(selectedFileIds) => {
+          indexingFiles(selectedFileIds);
+        }}
+        serverFiles={serverFiles}
+        onDelete={(ids) => {
+          deleteFile(ids);
+        }}
       />
     </div>
   );

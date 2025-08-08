@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
-import type { AskAIParams, Response } from "../utils/types";
+import type { AskAIParams, FileType, Response } from "../utils/types";
 import Cookies from "js-cookie";
 import type { NavigateFunction } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -92,7 +92,7 @@ export const uploadFile = async (files: File[]) => {
   });
 
   try {
-    const res = await api.post("/upload", formData, {
+    const res = await api.post("/files", formData, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -103,6 +103,57 @@ export const uploadFile = async (files: File[]) => {
     const msg = error?.response?.data?.message || "Gagal mengunggah file.";
     toast.error(msg);
     console.error("Gagal mengunggah file:", error);
+    throw new Error(msg);
+  }
+};
+
+export const deleteFile = async (files: string[]) => {
+  const token = Cookies.get("token");
+  if (!token) {
+    toast.error("Token tidak ditemukan. Silakan login kembali.");
+    throw new Error("Token not found");
+  }
+
+  const fileIds = files.map((file) => file);
+
+  try {
+    const res = await api.delete("/files", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      data: { fileIds },
+    });
+
+    toast.success(res.data?.message || "Berhasil menghapus file.");
+  } catch (error: any) {
+    const msg = error?.response?.data?.message || "Gagal menghapus file.";
+    toast.error(msg);
+    console.error("Gagal menghapus file:", error);
+    throw new Error(msg);
+  }
+};
+
+export const getFiles = async (): Promise<FileType[]> => {
+  const token = Cookies.get("token");
+
+  if (!token) {
+    toast.error("Token tidak ditemukan. Silakan login kembali.");
+    throw new Error("Token not found");
+  }
+
+  try {
+    const res = await api.get("/files", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return res.data.files || [];
+  } catch (error: any) {
+    const msg =
+      error?.response?.data?.message || "Gagal mengambil daftar file.";
+    toast.error(msg);
+    console.error("Gagal mengambil file:", error);
     throw new Error(msg);
   }
 };
@@ -125,6 +176,35 @@ export const deleteIndexing = async () => {
     const msg = error?.response?.data?.message || "Gagal menghapus file.";
     toast.error(msg);
     console.error("Gagal menghapus file:", error);
+    throw new Error(msg);
+  }
+};
+
+export const indexingFiles = async (files: string[]) => {
+  const token = Cookies.get("token");
+  if (!token) {
+    toast.error("Token tidak ditemukan. Silakan login kembali.");
+    throw new Error("Token not found");
+  }
+
+  const fileIds = files.map((file) => file);
+  const clearAll = false;
+  try {
+    const res = await api.post(
+      "/collections",
+      { fileIds, clearAll },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    toast.success(res.data?.message || "Berhasil mengindeks file.");
+  } catch (error: any) {
+    const msg = error?.response?.data?.message || "Gagal mengindeks file.";
+    toast.error(msg);
+    console.error("Gagal mengindeks file:", error);
     throw new Error(msg);
   }
 };

@@ -1,7 +1,7 @@
-export type Message = { 
-    id: string;
-    sender: "user" | "ai";
-    content: string 
+export type Message = {
+  id: string;
+  sender: "user" | "ai";
+  content: string;
 };
 
 export type Data = {
@@ -28,4 +28,13 @@ export type User = {
   iat: number;
   exp: number;
   role: string;
-}
+};
+
+export type FileType = {
+  id: string;
+  filename: string;
+  filepath: string;
+  indexed: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
