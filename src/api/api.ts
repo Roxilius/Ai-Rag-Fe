@@ -1,230 +1,145 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import axios from "axios";
-import type { AskAIParams, FileServer, Response } from "../utils/types";
+import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
-import type { NavigateFunction } from "react-router-dom";
 import toast from "react-hot-toast";
+import type { NavigateFunction } from "react-router-dom";
+import type { AskAIParams, FileServer, Response } from "../types/types";
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_BASE_URL,
   withCredentials: true,
 });
 
-export const askAI = async ({
-  userId,
-  question,
-}: AskAIParams): Promise<Response> => {
+function getAuthHeaders() {
   const token = Cookies.get("token");
   if (!token) {
     toast.error("Token tidak ditemukan. Silakan login kembali.");
     throw new Error("Token not found");
   }
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+}
 
+function handleApiError(error: unknown, defaultMessage: string): never {
+  const err = error as AxiosError<{ message?: string }>;
+  const msg = err.response?.data?.message || defaultMessage;
+  toast.error(msg);
+  console.error(defaultMessage, err);
+  throw new Error(msg);
+}
+
+export async function askAI(params: AskAIParams): Promise<Response> {
   try {
-    const res = await api.post(
+    const res = await api.post<Response>(
       "/ask",
-      { userId, question },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
+      params,
+      { headers: { ...getAuthHeaders(), "Content-Type": "application/json" } }
     );
-    console.log(res.data)
-    return res.data as Response;
-  } catch (error: any) {
-    const msg = error?.response?.data?.message || "Gagal mengambil respons AI.";
-    toast.error(msg);
-    console.error("Failed to fetch AI response:", error);
-    throw new Error(msg);
+    return res.data;
+  } catch (error) {
+    handleApiError(error, "Gagal mengambil respons AI.");
   }
-};
+}
 
-export const getuserinfo = async () => {
-  const token = Cookies.get("token");
-  if (!token) {
-    toast.error("Token tidak ditemukan. Silakan login kembali.");
-    throw new Error("Token not found");
+export async function getUserInfo() {
+  try {
+    const res = await api.get("auth/user-info", {
+      headers: getAuthHeaders(),
+    });
+    return res.data.data;
+  } catch (error) {
+    handleApiError(error, "Gagal mengambil informasi user.");
   }
+}
 
-  const res = await api.get("auth/user-info", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  return res.data.data;
-};
-
-export const verifLogin = async (
-  navigate: NavigateFunction,
-  idToken: string
-) => {
+export async function verifLogin(navigate: NavigateFunction, idToken: string) {
   try {
     const res = await api.post(
       "/auth/google",
       { idToken },
-      {
-        headers: { "Content-Type": "application/json" },
-      }
+      { headers: { "Content-Type": "application/json" } }
     );
 
     const { success, data, message } = res.data;
-
     if (success && data?.token && data?.user) {
-      console.log(data.token);
       Cookies.set("token", data.token);
       Cookies.set("user", JSON.stringify(data.user));
       toast.success("Login berhasil!");
       navigate("/chat");
     } else {
       toast.error(message || "Login gagal.");
-      console.error("Login gagal:", message);
     }
-  } catch (err: any) {
-    const msg = err?.response?.data?.message || "Terjadi kesalahan saat login.";
-    toast.error(msg);
-    console.error("Login error:", err);
+  } catch (error) {
+    handleApiError(error, "Terjadi kesalahan saat login.");
   }
-};
+}
 
-export const handleLogout = (navigate: NavigateFunction) => {
+export function handleLogout(navigate: NavigateFunction) {
   Cookies.remove("token");
-  Cookies.remove("user");
   toast("Logout berhasil", { icon: "👋" });
   navigate("/");
-};
+}
 
-export const uploadFile = async (files: File[]) => {
-  const token = Cookies.get("token");
-  if (!token) {
-    toast.error("Token tidak ditemukan. Silakan login kembali.");
-    throw new Error("Token not found");
-  }
-
-  const formData = new FormData();
-  files.forEach((file) => {
-    formData.append("file", file);
-  });
-
+export async function uploadFile(files: File[]) {
   try {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("file", file));
+
     const res = await api.post("/files", formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeaders(),
     });
-
     toast.success(res.data?.message || "Berhasil mengunggah file.");
-  } catch (error: any) {
-    const msg = error?.response?.data?.message || "Gagal mengunggah file.";
-    toast.error(msg);
-    console.error("Gagal mengunggah file:", error);
-    throw new Error(msg);
+  } catch (error) {
+    handleApiError(error, "Gagal mengunggah file.");
   }
-};
+}
 
-export const deleteFile = async (files: string[]) => {
-  const token = Cookies.get("token");
-  if (!token) {
-    toast.error("Token tidak ditemukan. Silakan login kembali.");
-    throw new Error("Token not found");
-  }
-
-  const fileIds = files.map((file) => file);
-
+export async function deleteFile(fileIds: string[]) {
   try {
     const res = await api.delete("/files", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeaders(),
       data: { fileIds },
     });
-
     toast.success(res.data?.message || "Berhasil menghapus file.");
-  } catch (error: any) {
-    const msg = error?.response?.data?.message || "Gagal menghapus file.";
-    toast.error(msg);
-    console.error("Gagal menghapus file:", error);
-    throw new Error(msg);
+  } catch (error) {
+    handleApiError(error, "Gagal menghapus file.");
   }
-};
+}
 
-export const getFiles = async (page: number): Promise<FileServer> => {
-  const token = Cookies.get("token");
-
-  if (!token) {
-    toast.error("Token tidak ditemukan. Silakan login kembali.");
-    throw new Error("Token not found");
-  }
-
+export async function getFiles(page: number): Promise<FileServer> {
   try {
     const res = await api.get(`/files?page=${page}&limit=10`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeaders(),
     });
-    const response = {
+    return {
       data: res.data.data,
-      pagination: res.data.pagination
-    }
-    return response;
-  } catch (error: any) {
-    const msg =
-      error?.response?.data?.message || "Gagal mengambil daftar file.";
-    toast.error(msg);
-    console.error("Gagal mengambil file:", error);
-    throw new Error(msg);
+      pagination: res.data.pagination,
+    };
+  } catch (error) {
+    handleApiError(error, "Gagal mengambil daftar file.");
   }
-};
+}
 
-export const deleteIndexing = async () => {
-  const token = Cookies.get("token");
-  if (!token) {
-    toast.error("Token tidak ditemukan. Silakan login kembali.");
-    throw new Error("Token not found");
-  }
-
+export async function deleteIndexing() {
   try {
     const res = await api.delete("/collections", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeaders(),
     });
     toast.success(res.data?.message || "File berhasil dihapus.");
-  } catch (error: any) {
-    const msg = error?.response?.data?.message || "Gagal menghapus file.";
-    toast.error(msg);
-    console.error("Gagal menghapus file:", error);
-    throw new Error(msg);
+  } catch (error) {
+    handleApiError(error, "Gagal menghapus file.");
   }
-};
+}
 
-export const indexingFiles = async (files: string[], clearAlll: boolean) => {
-  const token = Cookies.get("token");
-  if (!token) {
-    toast.error("Token tidak ditemukan. Silakan login kembali.");
-    throw new Error("Token not found");
-  }
-
-  const fileIds = files.map((file) => file);
-  const clearAll = clearAlll;
+export async function indexingFiles(files: string[], clearAll: boolean) {
   try {
     const res = await api.post(
       "/collections",
-      { fileIds, clearAll },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { fileIds: files, clearAll },
+      { headers: getAuthHeaders() }
     );
-
     toast.success(res.data?.message || "Berhasil mengindeks file.");
-  } catch (error: any) {
-    const msg = error?.response?.data?.message || "Gagal mengindeks file.";
-    toast.error(msg);
-    console.error("Gagal mengindeks file:", error);
-    throw new Error(msg);
+  } catch (error) {
+    handleApiError(error, "Gagal mengindeks file.");
   }
-};
+}

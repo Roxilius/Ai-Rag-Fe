@@ -1,14 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useRef, useState } from "react";
-import toast from "react-hot-toast";
-import type { FileServer } from "../utils/types";
-import { deleteIndexing, getFiles } from "../api/api";
+import React from "react";
+import { useUploadModal } from "../hooks/useUploadModal";
 
 type UploadModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onUpload: (files: File[]) => void;
-  onIndexing: (fileIds: string[]) => void;
+  onIndexing: (fileIds: string[]) => Promise<void> | void;
   onDelete: (fileIds: string[]) => void;
 };
 
@@ -19,212 +16,54 @@ const UploadModal: React.FC<UploadModalProps> = ({
   onIndexing,
   onDelete,
 }) => {
-  const [serverFiles, setServerFiles] = useState<FileServer | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [selectedForIndexing, setSelectedForIndexing] = useState<Set<string>>(new Set());
-
-  const allowedExtensions = [".xlsx", ".xls", ".csv", ".pdf", ".json"];
-
-  const isFileAllowed = (fileName: string) =>
-    allowedExtensions.some((ext) => fileName.toLowerCase().endsWith(ext));
-
-  const totalPages = serverFiles?.pagination?.totalPages || 1;
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const getServerFile = async () => {
-      try {
-        const res = await getFiles(currentPage);
-        setServerFiles(res);
-      } catch (err) {
-        toast.error("Gagal mengambil file dari server");
-      }
-    };
-
-    getServerFile();
-  }, [currentPage, isOpen]);
-
-  const handleAddFiles = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const newFiles = Array.from(e.target.files);
-
-    const validNewFiles = newFiles.filter((file) => {
-      if (!isFileAllowed(file.name)) {
-        toast.error(`File "${file.name}" tidak diperbolehkan.`);
-        return false;
-      }
-      return true;
-    });
-
-    const uniqueNewFiles = validNewFiles.filter(
-      (newFile) =>
-        !selectedFiles.some(
-          (existingFile) =>
-            existingFile.name === newFile.name && existingFile.size === newFile.size
-        )
-    );
-
-    const combinedFiles = [...selectedFiles, ...uniqueNewFiles];
-    if (combinedFiles.length > 10) {
-      toast.error("Maksimal hanya boleh upload 10 file!");
-      return;
-    }
-
-    setSelectedFiles(combinedFiles);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const handleUpload = () => {
-    if (selectedFiles.length === 0) {
-      toast.error("Silakan pilih minimal 1 file.");
-      return;
-    }
-    onUpload(selectedFiles);
-    setSelectedFiles([]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    onClose();
-  };
-
-  const handleCancel = () => {
-    setSelectedFiles([]);
-    setSelectedForIndexing(new Set());
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    onClose();
-  };
-
-  const handleRemoveFile = (index: number) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const toggleFileSelection = (id: string) => {
-    if (!serverFiles) return;
-    const file = serverFiles.data?.find((f) => f.id === id);
-    if (!file || file.indexed) return;
-
-    setSelectedForIndexing((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
-
-  const handleIndexing = async () => {
-    if (selectedForIndexing.size === 0) return;
-
-    const idsToIndex = Array.from(selectedForIndexing);
-
-    // Step 1: Ubah status jadi "Indexing..."
-    setServerFiles(prev =>
-      prev
-        ? {
-          ...prev,
-          data: prev.data?.map(file =>
-            idsToIndex.includes(String(file.id))
-              ? { ...file, status: "Indexing..." }
-              : file
-          )
-        }
-        : prev
-    );
-
-    try {
-      // Step 2: Tunggu proses indexing
-      await onIndexing(idsToIndex);
-
-      // Step 3: Setelah sukses, update indexed = true
-      setServerFiles(prev =>
-        prev
-          ? {
-            ...prev,
-            data: prev.data?.map(file =>
-              idsToIndex.includes(String(file.id))
-                ? { ...file, indexed: true, status: undefined }
-                : file
-            )
-          }
-          : prev
-      );
-
-      // Step 4: Clear pilihan
-      setSelectedForIndexing(new Set());
-
-      toast.success("Indexing berhasil!");
-    } catch (err) {
-      toast.error("Indexing gagal, silakan coba lagi.");
-    }
-  };
-
-
-  const handleDelete = () => {
-    if (selectedForIndexing.size === 0) return;
-
-    const idsToDelete = Array.from(selectedForIndexing);
-    onDelete(idsToDelete);
-
-    setServerFiles(prev =>
-      prev
-        ? {
-          ...prev,
-          data: prev.data?.filter(file => !idsToDelete.includes(String(file.id))) || []
-        }
-        : prev
-    );
-
-    setSelectedForIndexing(new Set());
-  };
-
-  const handleClearIndexing = async () => {
-    await deleteIndexing();
-    setServerFiles((prev) =>
-      prev
-        ? { ...prev, data: prev.data?.map((file) => ({ ...file, indexed: false })) || [] }
-        : prev
-    );
-  };
+  const {
+    serverFiles,
+    currentPage,
+    totalPages,
+    setCurrentPage,
+    isLoadingServerFiles,
+    fileInputRef,
+    selectedFiles,
+    selectedForIndexing,
+    handleAddFiles,
+    handleFileChange,
+    handleUpload,
+    handleCancel,
+    handleRemoveFile,
+    toggleFileSelection,
+    handleIndexing,
+    handleDelete,
+    handleClearIndexing,
+  } = useUploadModal({ isOpen, onUpload, onIndexing, onDelete });
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 font-sans p-2">
-      <div className="bg-white w-full max-w-5xl rounded-xl shadow-xl border border-gray-300 p-4 sm:p-6 relative flex flex-col md:flex-row gap-6 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2">
+      <div className="bg-white w-full max-w-5xl rounded-xl shadow-xl p-4 sm:p-6 flex flex-col md:flex-row gap-6 max-h-[90vh] overflow-y-auto">
+        {/* LEFT: Server Files */}
+        <div className="md:w-1/2 w-full border-b md:border-b-0 md:border-r pb-4 md:pr-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">File dari Server</h2>
+            <div className="text-sm text-gray-500">{isLoadingServerFiles ? "Loading..." : ""}</div>
+          </div>
 
-        {/* Bagian Kiri - File dari Server */}
-        <div className="md:w-1/2 w-full border-b md:border-b-0 md:border-r pb-4 md:pb-0 md:pr-4">
-          <h2 className="text-base sm:text-lg font-semibold mb-4 text-gray-800">
-            File dari Server
-          </h2>
-
-          <ul className="max-h-[50vh] overflow-y-auto pr-1 space-y-1">
+          <ul className="max-h-[50vh] overflow-y-auto space-y-1 pr-2">
             {serverFiles?.data?.length ? (
               serverFiles.data.map((file) => (
-                <li
-                  key={String(file.id)}
-                  className="flex items-center gap-2 text-sm break-words"
-                >
+                <li key={String(file.id)} className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
                     checked={selectedForIndexing.has(String(file.id))}
                     onChange={() => toggleFileSelection(String(file.id))}
-                    disabled={file.indexed}
+                    disabled={Boolean(file.indexed)}
+                    aria-label={`select-${file.filename}`}
                   />
                   <span className={file.indexed ? "text-gray-400 line-through" : ""}>
                     {file.filename}
                   </span>
-                  {file.indexed && (
-                    <span className="text-xs text-green-600 ml-1">(indexed)</span>
-                  )}
+                  {file.indexed && <span className="text-xs text-green-600 ml-1">(indexed)</span>}
+                  {file.indexed && <span className="text-xs text-gray-600 ml-2">• {file.indexed}</span>}
                 </li>
               ))
             ) : (
@@ -232,6 +71,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
             )}
           </ul>
 
+          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-center mt-3 gap-2 text-sm">
               <button
@@ -256,85 +96,92 @@ const UploadModal: React.FC<UploadModalProps> = ({
 
           <div className="mt-4 flex flex-wrap gap-2">
             <button
-              disabled={selectedForIndexing.size === 0}
+              disabled={!selectedForIndexing.size}
               onClick={handleIndexing}
-              className={`px-4 py-2 rounded bg-blue-600 text-white text-sm transition flex-1 sm:flex-none ${selectedForIndexing.size === 0
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-blue-700"
-                }`}
+              className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
             >
               Indexing
             </button>
-
             <button
-              disabled={selectedForIndexing.size === 0}
-              onClick={handleDelete}
-              className={`px-4 py-2 rounded bg-red-600 text-white text-sm transition flex-1 sm:flex-none ${selectedForIndexing.size === 0
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-red-700"
-                }`}
+              disabled={!selectedForIndexing.size}
+              onClick={() => {
+                if (!confirm("Yakin ingin menghapus file terpilih?")) return;
+                handleDelete();
+              }}
+              className="px-4 py-2 bg-red-600 text-white rounded disabled:opacity-50"
             >
               Delete
             </button>
-
             <button
-              onClick={handleClearIndexing}
-              className="px-4 py-2 rounded bg-[#ED1C24] hover:bg-red-700 text-white text-sm flex-1 sm:flex-none"
+              onClick={() => {
+                if (!confirm("Clear semua indexing di server?")) return;
+                handleClearIndexing();
+              }}
+              className="px-4 py-2 bg-[#ED1C24] text-white rounded"
             >
               Clear Indexing
             </button>
           </div>
         </div>
 
-        {/* Bagian Kanan - Upload File */}
+        {/* RIGHT: Upload */}
         <div className="md:w-1/2 w-full md:pl-4">
-          <h2 className="text-base sm:text-lg font-semibold mb-4 text-gray-800">
-            Upload File (max 10)
-          </h2>
+          <h2 className="text-lg font-semibold mb-4">Upload File (max 10)</h2>
+
           <input
-            type="file"
             ref={fileInputRef}
+            type="file"
             multiple
-            accept={allowedExtensions.join(",")}
+            accept=".xlsx,.xls,.csv,.pdf,.json"
             className="hidden"
             onChange={handleFileChange}
           />
-          <button
-            onClick={handleAddFiles}
-            className="px-4 py-2 mb-4 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition w-full sm:w-auto"
-          >
-            Tambah File
-          </button>
+
+          <div className="mb-4">
+            <button
+              onClick={handleAddFiles}
+              className="px-4 py-2 mb-2 bg-red-600 text-white rounded"
+            >
+              Tambah File
+            </button>
+            <div className="text-xs text-gray-500">Format: .xlsx .xls .csv .pdf .json</div>
+          </div>
 
           {selectedFiles.length > 0 && (
-            <ul className="mb-4 text-sm text-gray-800 space-y-1">
-              {selectedFiles.map((file, index) => (
-                <li
-                  key={`${file.name}-${file.size}`}
-                  className="flex justify-between items-center break-words"
-                >
+            <ul className="mb-4 space-y-1 text-sm">
+              {selectedFiles.map((file, idx) => (
+                <li key={`${file.name}-${file.size}`} className="flex justify-between items-center">
                   <span className="truncate max-w-[80%]">{file.name}</span>
-                  <button
-                    onClick={() => handleRemoveFile(index)}
-                    className="text-red-500 text-xs hover:underline ml-2"
-                  >
-                    Hapus
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">{(file.size / 1024).toFixed(1)} KB</span>
+                    <button
+                      onClick={() => handleRemoveFile(idx)}
+                      className="text-red-500 text-xs hover:underline"
+                    >
+                      Hapus
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
           )}
 
-          <div className="flex flex-col sm:flex-row justify-end gap-2">
+          <div className="flex gap-2 flex-col sm:flex-row justify-end">
             <button
-              onClick={handleCancel}
-              className="px-4 py-2 rounded-md text-sm font-medium border border-gray-300 text-gray-600 hover:bg-gray-100 transition w-full sm:w-auto"
+              onClick={() => {
+                handleCancel();
+                onClose();
+              }}
+              className="px-4 py-2 border rounded text-gray-600"
             >
               Cancel
             </button>
             <button
-              onClick={handleUpload}
-              className="px-4 py-2 rounded-md text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition w-full sm:w-auto"
+              onClick={() => {
+                handleUpload();
+                onClose();
+              }}
+              className="px-4 py-2 bg-red-600 text-white rounded"
             >
               Upload
             </button>
@@ -342,7 +189,6 @@ const UploadModal: React.FC<UploadModalProps> = ({
         </div>
       </div>
     </div>
-
   );
 };
 

@@ -1,24 +1,35 @@
-import React from "react";
+import React, { useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
+import toast from "react-hot-toast";
 import { verifLogin } from "../api/api";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleCredentialResponse = async (response: CredentialResponse) => {
-  const id_token = response.credential;
-  if (!id_token) {
-    console.error("No ID token received.");
-    return;
-  }
+  const handleCredentialResponse = useCallback(
+    async (response: CredentialResponse) => {
+      const idToken = response?.credential;
 
-  await verifLogin(navigate, id_token);
-};
+      if (!idToken) {
+        toast.error("Google login gagal. ID token tidak ditemukan.");
+        console.error("Google login error: No ID token received.");
+        return;
+      }
 
-  React.useEffect(() => {
+      try {
+        await verifLogin(navigate, idToken);
+      } catch (error) {
+        console.error("Login error:", error);
+        toast.error("Terjadi kesalahan saat login. Silakan coba lagi.");
+      }
+    },
+    [navigate]
+  );
+
+  useEffect(() => {
     Cookies.remove("token");
   }, []);
 
@@ -30,6 +41,7 @@ const LoginPage: React.FC = () => {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="bg-white shadow-xl rounded-2xl px-6 py-10 sm:p-10 max-w-md w-full text-center"
       >
+        {/* Logo */}
         <motion.img
           src="https://d2oi1rqwb0pj00.cloudfront.net/community/nio_1744103568525_100.webp"
           alt="IDStar Logo"
@@ -39,6 +51,7 @@ const LoginPage: React.FC = () => {
           transition={{ delay: 0.2, duration: 0.5 }}
         />
 
+        {/* Judul */}
         <motion.h2
           className="text-xl sm:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4"
           initial={{ opacity: 0, y: 10 }}
@@ -48,6 +61,7 @@ const LoginPage: React.FC = () => {
           Welcome to IDStar Portal
         </motion.h2>
 
+        {/* Deskripsi */}
         <motion.p
           className="text-sm text-gray-500 mb-6 sm:mb-8"
           initial={{ opacity: 0 }}
@@ -57,6 +71,7 @@ const LoginPage: React.FC = () => {
           Please sign in using your Google account.
         </motion.p>
 
+        {/* Tombol Login Google */}
         <motion.div
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.98 }}
@@ -64,7 +79,7 @@ const LoginPage: React.FC = () => {
         >
           <GoogleLogin
             onSuccess={handleCredentialResponse}
-            onError={() => console.log("Login Failed")}
+            onError={() => toast.error("Google login gagal.")}
           />
         </motion.div>
       </motion.div>
