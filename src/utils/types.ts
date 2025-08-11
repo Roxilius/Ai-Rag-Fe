@@ -38,3 +38,15 @@ export type FileType = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type Pagination = {
+  currentPage: number;
+  totalItems: number;
+  totalPages: number;
+  pageSize: number;
+};
+
+export type FileServer = {
+  data: FileType[];
+  pagination: Pagination;
+}

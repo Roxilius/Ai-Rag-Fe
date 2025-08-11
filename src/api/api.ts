@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
-import type { AskAIParams, FileType, Response } from "../utils/types";
+import type { AskAIParams, FileServer, Response } from "../utils/types";
 import Cookies from "js-cookie";
 import type { NavigateFunction } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -31,7 +31,7 @@ export const askAI = async ({
         },
       }
     );
-
+    console.log(res.data)
     return res.data as Response;
   } catch (error: any) {
     const msg = error?.response?.data?.message || "Gagal mengambil respons AI.";
@@ -39,6 +39,22 @@ export const askAI = async ({
     console.error("Failed to fetch AI response:", error);
     throw new Error(msg);
   }
+};
+
+export const getuserinfo = async () => {
+  const token = Cookies.get("token");
+  if (!token) {
+    toast.error("Token tidak ditemukan. Silakan login kembali.");
+    throw new Error("Token not found");
+  }
+
+  const res = await api.get("auth/user-info", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return res.data.data;
 };
 
 export const verifLogin = async (
@@ -57,6 +73,7 @@ export const verifLogin = async (
     const { success, data, message } = res.data;
 
     if (success && data?.token && data?.user) {
+      console.log(data.token);
       Cookies.set("token", data.token);
       Cookies.set("user", JSON.stringify(data.user));
       toast.success("Login berhasil!");
@@ -133,7 +150,7 @@ export const deleteFile = async (files: string[]) => {
   }
 };
 
-export const getFiles = async (): Promise<FileType[]> => {
+export const getFiles = async (page: number): Promise<FileServer> => {
   const token = Cookies.get("token");
 
   if (!token) {
@@ -142,13 +159,16 @@ export const getFiles = async (): Promise<FileType[]> => {
   }
 
   try {
-    const res = await api.get("/files", {
+    const res = await api.get(`/files?page=${page}&limit=10`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-
-    return res.data.files || [];
+    const response = {
+      data: res.data.data,
+      pagination: res.data.pagination
+    }
+    return response;
   } catch (error: any) {
     const msg =
       error?.response?.data?.message || "Gagal mengambil daftar file.";
@@ -180,7 +200,7 @@ export const deleteIndexing = async () => {
   }
 };
 
-export const indexingFiles = async (files: string[]) => {
+export const indexingFiles = async (files: string[], clearAlll: boolean) => {
   const token = Cookies.get("token");
   if (!token) {
     toast.error("Token tidak ditemukan. Silakan login kembali.");
@@ -188,7 +208,7 @@ export const indexingFiles = async (files: string[]) => {
   }
 
   const fileIds = files.map((file) => file);
-  const clearAll = false;
+  const clearAll = clearAlll;
   try {
     const res = await api.post(
       "/collections",

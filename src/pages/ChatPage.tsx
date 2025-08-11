@@ -2,30 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import ChatMessage from "../components/ChatMessage";
 import TypingIndicator from "../components/TypingIndicator";
 import ChatInput from "../components/ChatInput";
-import { askAI, deleteFile, handleLogout, indexingFiles, uploadFile } from "../api/api";
+import { askAI, deleteFile, getuserinfo, handleLogout, indexingFiles, uploadFile } from "../api/api";
 import { useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
-import type { FileType, Message, User } from "../utils/types";
+import type { Message, User } from "../utils/types";
 import UploadModal from "../components/UploadModal";
 
-const beFile = [
-  {
-    "id": "9a20b982-d505-4a4e-b3b6-cb585a89d38f",
-    "filename": "1754560220194_PRA UTS DETING BETA (1).pdf",
-    "filepath": "uploads/1754560220194_PRA UTS DETING BETA (1).pdf",
-    "indexed": false,
-    "createdAt": "2025-08-07T09:50:21.104Z",
-    "updatedAt": "2025-08-07T09:50:21.104Z"
-  },
-  {
-    "id": "5af4a257-db47-4c6d-9ca3-99bcf09f6fab",
-    "filename": "1754559532887_RAG NodeJS.postman_collection.json",
-    "filepath": "uploads/1754559532887_RAG NodeJS.postman_collection.json",
-    "indexed": true,
-    "createdAt": "2025-08-07T09:38:52.975Z",
-    "updatedAt": "2025-08-07T09:48:25.348Z"
-  }
-]
+
 
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -34,7 +16,6 @@ const ChatPage: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userDetail, setUserDetail] = useState<User | null>(null);
-  const [serverFiles, setServerFiles] = useState<FileType[]>(beFile);
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
@@ -83,24 +64,23 @@ const ChatPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const user = Cookies.get("user");
-    if (!user) {
-      return;
+    let isMounted = true;
+
+    async function getUser() {
+      try {
+        const res = await getuserinfo();
+        if (isMounted) setUserDetail(res);
+      } catch (err) {
+        console.error("Gagal ambil user info:", err);
+      }
     }
-    try {
-      const parsedUser = JSON.parse(user);
-      setUserDetail(parsedUser);
-    } catch (err) {
-      console.error("Gagal parsing user dari cookie:", err);
-      Cookies.remove("user");
-      navigate("/");
-    }
-    if (beFile) {
-      setServerFiles(beFile);
-    } else {
-      setServerFiles([]);
-    }
-  }, [navigate]);
+
+    getUser();
+
+    return () => {
+      isMounted = false; // mencegah set state setelah unmount
+    };
+  }, []);
 
   const handleUpload = (files: File[]) => {
     uploadFile(files);
@@ -203,9 +183,12 @@ const ChatPage: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         onUpload={handleUpload}
         onIndexing={(selectedFileIds) => {
-          indexingFiles(selectedFileIds);
+          if (confirm(`clear all`)) {
+            indexingFiles(selectedFileIds, true);
+          } else {
+            indexingFiles(selectedFileIds, false);
+          }
         }}
-        serverFiles={serverFiles}
         onDelete={(ids) => {
           deleteFile(ids);
         }}
