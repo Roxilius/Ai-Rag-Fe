@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useRef, useState } from "react";
 import ChatMessage from "../components/ChatMessage";
 import TypingIndicator from "../components/TypingIndicator";
@@ -95,6 +94,11 @@ const ChatPage: React.FC = () => {
       console.error("Gagal parsing user dari cookie:", err);
       Cookies.remove("user");
       navigate("/");
+    }
+    if (beFile) {
+      setServerFiles(beFile);
+    } else {
+      setServerFiles([]);
     }
   }, [navigate]);
 
