@@ -8,7 +8,7 @@ import { isFileAllowed, filterUniqueFiles } from "../utils/fileHelpers";
 type UseUploadModalProps = {
   isOpen: boolean;
   onUpload: (files: File[]) => void;
-  onIndexing: (fileIds: string[]) => Promise<void> | void;
+  onIndexing: (fileIds: string[], clearAll: boolean) => Promise<void> | void;
   onDelete: (fileIds: string[]) => void;
 };
 
@@ -125,31 +125,14 @@ export function useUploadModal({
     [serverFiles]
   );
 
-  const handleIndexing = useCallback(async () => {
-    if (!selectedForIndexing.size) {
-      toast.error("Pilih file terlebih dahulu untuk di-indexing.");
-      return;
-    }
-    const ids = Array.from(selectedForIndexing);
+  const handleIndexing = useCallback(
+    async (clearAll: boolean) => {
+      if (!selectedForIndexing.size) {
+        toast.error("Pilih file terlebih dahulu untuk di-indexing.");
+        return;
+      }
+      const ids = Array.from(selectedForIndexing);
 
-    // set status sementara di UI
-    setServerFiles((prev) =>
-      prev
-        ? {
-            ...prev,
-            data:
-              prev.data?.map((f) =>
-                ids.includes(String(f.id)) ? { ...f, status: "Indexing..." } : f
-              ) || [],
-          }
-        : prev
-    );
-
-    try {
-      const ret = onIndexing(ids);
-      await Promise.resolve(ret); // support sync & async implementations
-
-      // update state jadi indexed
       setServerFiles((prev) =>
         prev
           ? {
@@ -157,25 +140,57 @@ export function useUploadModal({
               data:
                 prev.data?.map((f) =>
                   ids.includes(String(f.id))
-                    ? { ...f, indexed: true, status: undefined }
+                    ? { ...f, status: "Indexing..." }
                     : f
                 ) || [],
             }
           : prev
       );
-      setSelectedForIndexing(new Set());
-      toast.success("Indexing berhasil!");
-    } catch (err) {
-      console.error("Indexing error:", err);
-      toast.error("Indexing gagal, silakan coba lagi.");
-      // kembalikan status (bersih)
-      setServerFiles((prev) =>
-        prev
-          ? { ...prev, data: prev.data?.map((f) => ({ ...f, status: undefined })) || [] }
-          : prev
-      );
-    }
-  }, [onIndexing, selectedForIndexing]);
+
+      try {
+        const ret = onIndexing(ids, clearAll);
+        await Promise.resolve(ret);
+
+        setServerFiles((prev) =>
+          prev
+            ? {
+                ...prev,
+                data:
+                  prev.data?.map((f) => {
+                    if (clearAll) {
+                      if (ids.includes(String(f.id))) {
+                        return { ...f, indexed: true, status: undefined };
+                      } else {
+                        return { ...f, indexed: false, status: undefined };
+                      }
+                    } else {
+                      if (ids.includes(String(f.id))) {
+                        return { ...f, indexed: true, status: undefined };
+                      }
+                      return { ...f, status: undefined };
+                    }
+                  }) || [],
+              }
+            : prev
+        );
+        setSelectedForIndexing(new Set());
+        toast.success("Indexing berhasil!");
+      } catch (err) {
+        console.error("Indexing error:", err);
+        toast.error("Indexing gagal, silakan coba lagi.");
+        setServerFiles((prev) =>
+          prev
+            ? {
+                ...prev,
+                data:
+                  prev.data?.map((f) => ({ ...f, status: undefined })) || [],
+              }
+            : prev
+        );
+      }
+    },
+    [onIndexing, selectedForIndexing]
+  );
 
   const handleDelete = useCallback(() => {
     if (!selectedForIndexing.size) {
@@ -185,7 +200,12 @@ export function useUploadModal({
     const ids = Array.from(selectedForIndexing);
     onDelete(ids);
     setServerFiles((prev) =>
-      prev ? { ...prev, data: prev.data?.filter((f) => !ids.includes(String(f.id))) || [] } : prev
+      prev
+        ? {
+            ...prev,
+            data: prev.data?.filter((f) => !ids.includes(String(f.id))) || [],
+          }
+        : prev
     );
     setSelectedForIndexing(new Set());
     toast.success("Delete request dikirim.");
@@ -196,7 +216,11 @@ export function useUploadModal({
       await deleteIndexing();
       setServerFiles((prev) =>
         prev
-          ? { ...prev, data: prev.data?.map((file) => ({ ...file, indexed: false })) || [] }
+          ? {
+              ...prev,
+              data:
+                prev.data?.map((file) => ({ ...file, indexed: false })) || [],
+            }
           : prev
       );
       toast.success("Indexing cleared.");

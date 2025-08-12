@@ -62,6 +62,7 @@ export async function verifLogin(navigate: NavigateFunction, idToken: string) {
 
     const { success, data, message } = res.data;
     if (success && data?.token && data?.user) {
+      console.log(data.token)
       Cookies.set("token", data.token);
       Cookies.set("user", JSON.stringify(data.user));
       toast.success("Login berhasil!");

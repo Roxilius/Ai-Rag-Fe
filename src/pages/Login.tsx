@@ -1,34 +1,13 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
-import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
+import { GoogleLogin } from "@react-oauth/google";
 import toast from "react-hot-toast";
-import { verifLogin } from "../api/api";
+import { useAuth } from "../hooks/useAuth";
 
 const LoginPage: React.FC = () => {
-  const navigate = useNavigate();
-
-  const handleCredentialResponse = useCallback(
-    async (response: CredentialResponse) => {
-      const idToken = response?.credential;
-
-      if (!idToken) {
-        toast.error("Google login gagal. ID token tidak ditemukan.");
-        console.error("Google login error: No ID token received.");
-        return;
-      }
-
-      try {
-        await verifLogin(navigate, idToken);
-      } catch (error) {
-        console.error("Login error:", error);
-        toast.error("Terjadi kesalahan saat login. Silakan coba lagi.");
-      }
-    },
-    [navigate]
-  );
-
+  const {handleCredentialResponse} = useAuth()
+  
   useEffect(() => {
     Cookies.remove("token");
   }, []);

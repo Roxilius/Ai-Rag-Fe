@@ -1,5 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { askAI, uploadFile, indexingFiles, deleteFile, getUserInfo } from "../api/api";
+import {
+  askAI,
+  uploadFile,
+  indexingFiles,
+  deleteFile,
+  getUserInfo,
+} from "../api/api";
 import type { Message, User } from "../types/types";
 
 export function useChat() {
@@ -20,7 +26,9 @@ export function useChat() {
         console.error("Gagal ambil user info:", err);
       }
     })();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Simulasi efek mengetik AI
@@ -31,35 +39,53 @@ export function useChat() {
       setCurrentAiMessage(text.slice(0, i + 1));
       await new Promise((r) => setTimeout(r, 15));
     }
-    setMessages((prev) => [...prev, { id: crypto.randomUUID(), sender: "ai", content: text }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), sender: "ai", content: text },
+    ]);
     setCurrentAiMessage("");
     setIsTyping(false);
   }, []);
 
   // Kirim pesan
-  const handleSend = useCallback(async (message: string) => {
-    setMessages((prev) => [...prev, { id: crypto.randomUUID(), sender: "user", content: message }]);
-    setIsTyping(true);
-    setCurrentAiMessage("");
-    try {
-      const { success, data } = await askAI({
-        userId: userDetail?.userId || "default",
-        question: message,
-      });
-      const full = success ? data.answer : "Maaf, terjadi kesalahan saat memproses jawaban AI.";
-      await simulateTyping(full);
-    } catch {
+  const handleSend = useCallback(
+    async (message: string) => {
       setMessages((prev) => [
         ...prev,
-        { id: crypto.randomUUID(), sender: "ai", content: "Maaf, terjadi error saat menghubungi server." },
+        { id: crypto.randomUUID(), sender: "user", content: message },
       ]);
-      setIsTyping(false);
-    }
-  }, [simulateTyping, userDetail?.userId]);
+      setIsTyping(true);
+      setCurrentAiMessage("");
+      try {
+        const { success, data } = await askAI({
+          userId: userDetail?.userId || "default",
+          question: message,
+        });
+        const full = success
+          ? data.answer
+          : "Maaf, terjadi kesalahan saat memproses jawaban AI.";
+        await simulateTyping(full);
+      } catch {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            sender: "ai",
+            content: "Maaf, terjadi error saat menghubungi server.",
+          },
+        ]);
+        setIsTyping(false);
+      }
+    },
+    [simulateTyping, userDetail?.userId]
+  );
 
   // Upload & File Handling
   const handleUpload = useCallback((files: File[]) => uploadFile(files), []);
-  const handleIndexing = useCallback((ids: string[], clear: boolean) => indexingFiles(ids, clear), []);
+  const handleIndexing = useCallback(
+    (ids: string[], clear: boolean) => indexingFiles(ids, clear),
+    []
+  );
   const handleDelete = useCallback((ids: string[]) => deleteFile(ids), []);
 
   return {
@@ -72,6 +98,6 @@ export function useChat() {
     handleUpload,
     handleIndexing,
     handleDelete,
-    setMessages
+    setMessages,
   } as const;
 }

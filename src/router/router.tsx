@@ -3,7 +3,7 @@ import App from "../App";
 import LoginPage from "../pages/Login";
 import ProtectedRoute from "./ProtectedRoute";
 import ChatPage from "../pages/ChatPage";
-// import { GoogleOAuthProvider } from "@react-oauth/google";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 export const router = createBrowserRouter([
   {
@@ -13,9 +13,9 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: (
-          // <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+          <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
             <LoginPage />
-          // </GoogleOAuthProvider>
+          </GoogleOAuthProvider>
         ),
       },
       {

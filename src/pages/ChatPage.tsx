@@ -101,8 +101,7 @@ const ChatPage: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onUpload={handleUpload}
-        onIndexing={(selectedFileIds) => {
-          const clearAll = confirm("Clear all?");
+        onIndexing={(selectedFileIds, clearAll) => {
           handleIndexing(selectedFileIds, clearAll);
         }}
         onDelete={handleDelete}

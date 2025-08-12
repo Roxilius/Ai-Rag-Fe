@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { useUploadModal } from "../hooks/useUploadModal";
+import ConfirmPopup from "./ConfirmPopup";
+import ChoicePopup from "./ChoicePopup ";
 
 type UploadModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onUpload: (files: File[]) => void;
-  onIndexing: (fileIds: string[]) => Promise<void> | void;
+  onIndexing: (fileIds: string[], clearAll: boolean) => Promise<void> | void;
   onDelete: (fileIds: string[]) => void;
 };
 
@@ -35,6 +37,30 @@ const UploadModal: React.FC<UploadModalProps> = ({
     handleDelete,
     handleClearIndexing,
   } = useUploadModal({ isOpen, onUpload, onIndexing, onDelete });
+
+  const [confirmPopup, setConfirmPopup] = useState<{
+    isOpen: boolean;
+    message: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, message: "", onConfirm: () => { } });
+
+  const [choicePopupOpen, setChoicePopupOpen] = useState(false);
+
+  const openConfirmPopup = (message: string, onConfirm: () => void) => {
+    setConfirmPopup({ isOpen: true, message, onConfirm });
+  };
+  const closeConfirmPopup = () => {
+    setConfirmPopup({ ...confirmPopup, isOpen: false });
+  };
+
+  const openIndexingChoicePopup = () => {
+    setChoicePopupOpen(true);
+  };
+
+  const closeChoicePopup = () => {
+    setChoicePopupOpen(false);
+  };
+
 
   if (!isOpen) return null;
 
@@ -97,16 +123,19 @@ const UploadModal: React.FC<UploadModalProps> = ({
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               disabled={!selectedForIndexing.size}
-              onClick={handleIndexing}
+              onClick={openIndexingChoicePopup}
               className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
             >
               Indexing
             </button>
+
             <button
               disabled={!selectedForIndexing.size}
               onClick={() => {
-                if (!confirm("Yakin ingin menghapus file terpilih?")) return;
-                handleDelete();
+                openConfirmPopup("Yakin ingin menghapus file terpilih?", () => {
+                  handleDelete();
+                  closeConfirmPopup();
+                });
               }}
               className="px-4 py-2 bg-red-600 text-white rounded disabled:opacity-50"
             >
@@ -114,8 +143,10 @@ const UploadModal: React.FC<UploadModalProps> = ({
             </button>
             <button
               onClick={() => {
-                if (!confirm("Clear semua indexing di server?")) return;
-                handleClearIndexing();
+                openConfirmPopup("Clear semua indexing di server?", () => {
+                  handleClearIndexing();
+                  closeConfirmPopup();
+                });
               }}
               className="px-4 py-2 bg-[#ED1C24] text-white rounded"
             >
@@ -187,6 +218,33 @@ const UploadModal: React.FC<UploadModalProps> = ({
             </button>
           </div>
         </div>
+        <ConfirmPopup
+          isOpen={confirmPopup.isOpen}
+          message={confirmPopup.message}
+          onConfirm={confirmPopup.onConfirm}
+          onCancel={closeConfirmPopup}
+        />
+        <ChoicePopup isOpen={choicePopupOpen} onClose={closeChoicePopup} title="Pilih jenis indexing:">
+          <button
+            onClick={() => {
+              handleIndexing(false);
+              closeChoicePopup();
+            }}
+            className="mr-2 px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            Indexing Biasa
+          </button>
+          <button
+            onClick={() => {
+              handleIndexing(true);
+              closeChoicePopup();
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded"
+          >
+            Clear All Indexing
+          </button>
+        </ChoicePopup>
+
       </div>
     </div>
   );
