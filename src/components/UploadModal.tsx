@@ -200,21 +200,21 @@ const UploadModal: React.FC<UploadModalProps> = ({
           <div className="flex gap-2 flex-col sm:flex-row justify-end">
             <button
               onClick={() => {
-                handleCancel();
-                onClose();
-              }}
-              className="px-4 py-2 border rounded text-gray-600"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => {
                 handleUpload();
                 onClose();
               }}
               className="px-4 py-2 bg-red-600 text-white rounded"
             >
               Upload
+            </button>
+            <button
+              onClick={() => {
+                handleCancel();
+                onClose();
+              }}
+              className="px-4 py-2 border rounded text-gray-600"
+            >
+              Cancel
             </button>
           </div>
         </div>

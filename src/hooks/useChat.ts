@@ -15,23 +15,32 @@ export function useChat() {
   const [userDetail, setUserDetail] = useState<User | null>(null);
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Ambil info user saat load
   useEffect(() => {
     let isMounted = true;
-    (async () => {
-      try {
-        const res = await getUserInfo();
-        if (isMounted) setUserDetail(res);
-      } catch (err) {
-        console.error("Gagal ambil user info:", err);
-      }
-    })();
+    const storedUser = sessionStorage.getItem("userDetail");
+
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser) as User;
+      setUserDetail(parsedUser);
+    } else {
+      (async () => {
+        try {
+          const res = await getUserInfo();
+          if (isMounted) {
+            setUserDetail(res);
+            sessionStorage.setItem("userDetail", JSON.stringify(res));
+          }
+        } catch (err) {
+          console.error("Gagal ambil user info:", err);
+        }
+      })();
+    }
+
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // Simulasi efek mengetik AI
   const simulateTyping = useCallback(async (text: string) => {
     setIsTyping(true);
     setCurrentAiMessage("");

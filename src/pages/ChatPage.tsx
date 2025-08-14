@@ -5,7 +5,7 @@ import TypingIndicator from "../components/TypingIndicator";
 import ChatInput from "../components/ChatInput";
 import UploadModal from "../components/UploadModal";
 import { handleLogout } from "../api/api";
-import { useChat } from "../hooks/useChat"; 
+import { useChat } from "../hooks/useChat";
 
 const ChatPage: React.FC = () => {
   const {
@@ -37,7 +37,7 @@ const ChatPage: React.FC = () => {
               className="p-0 border-none bg-transparent"
             >
               <img
-                src={userDetail?.picture}
+                src={userDetail.picture}
                 alt="User"
                 className="w-8 h-8 rounded-full cursor-pointer border-2 border-white hover:scale-105 transition"
               />
@@ -46,7 +46,11 @@ const ChatPage: React.FC = () => {
           {showDropdown && (
             <div className="absolute top-12 right-0 bg-white text-black rounded-lg shadow-lg p-4 z-50 w-60">
               <div className="flex items-center gap-3 mb-4">
-                <img src={userDetail?.picture} alt="User" className="w-10 h-10 rounded-full" />
+                <img
+                  src={userDetail?.picture}
+                  alt="User"
+                  className="w-10 h-10 rounded-full"
+                />
                 <div>
                   <p className="text-sm font-medium">{userDetail?.name}</p>
                   <p className="text-xs text-gray-500">{userDetail?.email}</p>
@@ -80,13 +84,15 @@ const ChatPage: React.FC = () => {
         className="flex flex-col-reverse flex-1 overflow-y-auto bg-white px-2 py-4 sm:px-4 gap-3"
       >
         {isTyping && <TypingIndicator />}
-        {currentAiMessage && <ChatMessage message={currentAiMessage} sender="ai" image="" />}
+        {currentAiMessage && (
+          <ChatMessage message={currentAiMessage} sender="ai" image="" />
+        )}
         {[...messages].reverse().map((m) => (
           <ChatMessage
             key={m.id}
             message={m.content}
             sender={m.sender}
-            image={userDetail?.picture}
+            image={m.sender === "user" ? userDetail?.picture : ""}
           />
         ))}
       </div>

@@ -10,7 +10,6 @@ export function useAuth() {
   const handleCredentialResponse = useCallback(
     async (response: CredentialResponse) => {
       const idToken = response?.credential;
-      console.log(idToken);
       if (!idToken) {
         toast.error("Google login gagal. ID token tidak ditemukan.");
         console.error("Google login error: No ID token received.");

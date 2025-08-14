@@ -10,6 +10,7 @@ const LoginPage: React.FC = () => {
   
   useEffect(() => {
     Cookies.remove("token");
+    sessionStorage.removeItem("userDetail");
   }, []);
 
   return (
