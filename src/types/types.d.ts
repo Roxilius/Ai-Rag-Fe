@@ -20,16 +20,6 @@ export type AskAIParams = {
   question: string;
 };
 
-export type User = {
-  userId: string;
-  picture: string;
-  email: string;
-  name: string;
-  iat: number;
-  exp: number;
-  role: string;
-};
-
 export type FileType = {
   id: string;
   filename: string;
@@ -49,4 +39,48 @@ export type Pagination = {
 export type FileServer = {
   data: FileType[];
   pagination: Pagination;
-}
+};
+
+export type Contact = {
+  id: string;
+  name: string;
+  number: string;
+  createdAt: string;
+  updatedAt: string;
+  status: string;
+};
+
+export type ContactServer = {
+  data: Contact[];
+  pagination: Pagination;
+};
+
+export type User = {
+  userId: string;
+  picture?: string;
+  email: string;
+  name: string;
+  iat: number;
+  exp: number;
+  roleId?: string;
+  role: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+export type Users = {
+  data: User[];
+  pagination: Pagination;
+};
+
+export type Role = {
+  createdAt: string;
+  updatedAt: string;
+  id: string;
+  name: string;
+  status: string;
+};
+
+export type Roles = {
+  data: Role[];
+  pagination: Pagination;
+};

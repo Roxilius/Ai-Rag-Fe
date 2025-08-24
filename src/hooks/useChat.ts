@@ -1,45 +1,14 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import {
-  askAI,
-  uploadFile,
-  indexingFiles,
-  deleteFile,
-  getUserInfo,
-} from "../api/api";
-import type { Message, User } from "../types/types";
+import { useState, useRef, useCallback } from "react";
+import { askAI, uploadFile, indexingFiles, deleteFile } from "../api/api";
+import type { Message } from "../types/types";
+import { useAuth } from "./useAuth";
 
 export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [currentAiMessage, setCurrentAiMessage] = useState("");
-  const [userDetail, setUserDetail] = useState<User | null>(null);
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-    const storedUser = sessionStorage.getItem("userDetail");
-
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser) as User;
-      setUserDetail(parsedUser);
-    } else {
-      (async () => {
-        try {
-          const res = await getUserInfo();
-          if (isMounted) {
-            setUserDetail(res);
-            sessionStorage.setItem("userDetail", JSON.stringify(res));
-          }
-        } catch (err) {
-          console.error("Gagal ambil user info:", err);
-        }
-      })();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const { userDetail } = useAuth();
 
   const simulateTyping = useCallback(async (text: string) => {
     setIsTyping(true);
@@ -101,7 +70,6 @@ export function useChat() {
     messages,
     isTyping,
     currentAiMessage,
-    userDetail,
     chatContainerRef,
     handleSend,
     handleUpload,

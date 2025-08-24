@@ -1,23 +1,18 @@
-// src/hooks/useUploadModal.ts
-import { useState, useEffect, useRef, useCallback } from "react";
+/* eslint-disable @typescript-eslint/no-unused-expressions */
+// hooks/useFileHandler.ts
+import { useCallback, useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
+import {
+  uploadFile,
+  indexingFiles,
+  deleteFile,
+  getFiles,
+  deleteIndexing,
+} from "../api/api";
 import type { FileServer } from "../types/types";
-import { deleteIndexing, getFiles } from "../api/api";
 import { isFileAllowed, filterUniqueFiles } from "../utils/fileHelpers";
 
-type UseUploadModalProps = {
-  isOpen: boolean;
-  onUpload: (files: File[]) => void;
-  onIndexing: (fileIds: string[], clearAll: boolean) => Promise<void> | void;
-  onDelete: (fileIds: string[]) => void;
-};
-
-export function useUploadModal({
-  isOpen,
-  onUpload,
-  onIndexing,
-  onDelete,
-}: UseUploadModalProps) {
+export function useFileHandler(isOpen: boolean) {
   const [serverFiles, setServerFiles] = useState<FileServer | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isLoadingServerFiles, setIsLoadingServerFiles] = useState(false);
@@ -25,36 +20,44 @@ export function useUploadModal({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [selectedForIndexing, setSelectedForIndexing] = useState<Set<string>>(
-    () => new Set()
+    new Set()
   );
 
   const totalPages = serverFiles?.pagination?.totalPages || 1;
 
-  // Fetch file server
+  // helper untuk reset file input
+  const resetFileInput = () => {
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // === Fetch file server ===
   useEffect(() => {
     if (!isOpen) return;
-    let isMounted = true;
+    const controller = new AbortController();
 
     const fetchFiles = async () => {
       setIsLoadingServerFiles(true);
       try {
         const res = await getFiles(currentPage);
-        if (!isMounted) return;
-        setServerFiles(res);
+        if (!controller.signal.aborted) {
+          setServerFiles(res);
+        }
       } catch (err) {
-        console.error("getFiles error:", err);
-        toast.error("Gagal mengambil file dari server");
+        if (!controller.signal.aborted) {
+          console.error("getFiles error:", err);
+        }
       } finally {
-        if (isMounted) setIsLoadingServerFiles(false);
+        if (!controller.signal.aborted) {
+          setIsLoadingServerFiles(false);
+        }
       }
     };
 
     fetchFiles();
-    return () => {
-      isMounted = false;
-    };
+    return () => controller.abort();
   }, [isOpen, currentPage]);
 
+  // === File Upload ===
   const handleAddFiles = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
@@ -65,60 +68,74 @@ export function useUploadModal({
       if (!filesList) return;
       const newFiles = Array.from(filesList);
 
+      // filter file yang valid
       const validNewFiles = newFiles.filter((file) => {
         if (!isFileAllowed(file.name)) {
+          toast.dismiss();
           toast.error(`File "${file.name}" tidak diperbolehkan.`);
           return false;
         }
         return true;
       });
 
+      // filter agar tidak duplikat
       const uniqueNewFiles = filterUniqueFiles(selectedFiles, validNewFiles);
 
+      // maksimal 10 file
       if (selectedFiles.length + uniqueNewFiles.length > 10) {
+        toast.dismiss();
         toast.error("Maksimal hanya boleh upload 10 file!");
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        resetFileInput();
         return;
       }
 
       setSelectedFiles((prev) => [...prev, ...uniqueNewFiles]);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      resetFileInput();
     },
     [selectedFiles]
   );
 
-  const handleUpload = useCallback(() => {
+  const handleUpload = useCallback(async () => {
     if (!selectedFiles.length) {
+      toast.dismiss();
       toast.error("Silakan pilih minimal 1 file.");
       return;
     }
-    onUpload(selectedFiles);
-    setSelectedFiles([]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    toast.success("Upload dimulai.");
-  }, [onUpload, selectedFiles]);
+
+    try {
+      await uploadFile(selectedFiles);
+
+      // refresh server files setelah upload
+      const res = await getFiles(currentPage);
+      setServerFiles(res);
+
+      setSelectedFiles([]);
+      resetFileInput();
+    } catch (err) {
+      console.error("Upload error:", err);
+    }
+  }, [selectedFiles, currentPage]);
 
   const handleCancel = useCallback(() => {
     setSelectedFiles([]);
     setSelectedForIndexing(new Set());
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    resetFileInput();
   }, []);
 
   const handleRemoveFile = useCallback((index: number) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
+  // === Indexing ===
   const toggleFileSelection = useCallback(
     (id: string) => {
       if (!serverFiles) return;
       const file = serverFiles.data?.find((f) => String(f.id) === id);
-      if (!file) return;
-      if (file.indexed) return;
+      if (!file || file.indexed) return;
 
       setSelectedForIndexing((prev) => {
         const next = new Set(prev);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
+        next.has(id) ? next.delete(id) : next.add(id);
         return next;
       });
     },
@@ -128,11 +145,13 @@ export function useUploadModal({
   const handleIndexing = useCallback(
     async (clearAll: boolean) => {
       if (!selectedForIndexing.size) {
+        toast.dismiss();
         toast.error("Pilih file terlebih dahulu untuk di-indexing.");
         return;
       }
       const ids = Array.from(selectedForIndexing);
 
+      // update status sementara
       setServerFiles((prev) =>
         prev
           ? {
@@ -148,8 +167,7 @@ export function useUploadModal({
       );
 
       try {
-        const ret = onIndexing(ids, clearAll);
-        await Promise.resolve(ret);
+        await indexingFiles(ids, clearAll);
 
         setServerFiles((prev) =>
           prev
@@ -157,27 +175,19 @@ export function useUploadModal({
                 ...prev,
                 data:
                   prev.data?.map((f) => {
-                    if (clearAll) {
-                      if (ids.includes(String(f.id))) {
-                        return { ...f, indexed: true, status: undefined };
-                      } else {
-                        return { ...f, indexed: false, status: undefined };
-                      }
-                    } else {
-                      if (ids.includes(String(f.id))) {
-                        return { ...f, indexed: true, status: undefined };
-                      }
-                      return { ...f, status: undefined };
+                    if (ids.includes(String(f.id))) {
+                      return { ...f, indexed: true, status: undefined };
                     }
+                    return clearAll
+                      ? { ...f, indexed: false, status: undefined }
+                      : { ...f, status: undefined };
                   }) || [],
               }
             : prev
         );
         setSelectedForIndexing(new Set());
-        toast.success("Indexing berhasil!");
       } catch (err) {
         console.error("Indexing error:", err);
-        toast.error("Indexing gagal, silakan coba lagi.");
         setServerFiles((prev) =>
           prev
             ? {
@@ -189,46 +199,45 @@ export function useUploadModal({
         );
       }
     },
-    [onIndexing, selectedForIndexing]
+    [selectedForIndexing]
   );
 
-  const handleDelete = useCallback(() => {
+  // === Delete ===
+  const handleDelete = useCallback(async () => {
     if (!selectedForIndexing.size) {
+      toast.dismiss();
       toast.error("Pilih file terlebih dahulu untuk dihapus.");
       return;
     }
     const ids = Array.from(selectedForIndexing);
-    onDelete(ids);
-    setServerFiles((prev) =>
-      prev
-        ? {
-            ...prev,
-            data: prev.data?.filter((f) => !ids.includes(String(f.id))) || [],
-          }
-        : prev
-    );
-    setSelectedForIndexing(new Set());
-    toast.success("Delete request dikirim.");
-  }, [onDelete, selectedForIndexing]);
-
-  const handleClearIndexing = useCallback(async () => {
     try {
-      await deleteIndexing();
+      await deleteFile(ids);
       setServerFiles((prev) =>
         prev
           ? {
               ...prev,
-              data:
-                prev.data?.map((file) => ({ ...file, indexed: false })) || [],
+              data: prev.data?.filter((f) => !ids.includes(String(f.id))) || [],
             }
           : prev
       );
-      toast.success("Indexing cleared.");
+      setSelectedForIndexing(new Set());
+    } catch (err) {
+      console.error("deleteFile error:", err);
+    }
+  }, [selectedForIndexing]);
+
+  // === Clear Indexing ===
+  const handleClearIndexing = useCallback(async () => {
+    try {
+      await deleteIndexing();
+
+      // refresh data server setelah clear indexing
+      const res = await getFiles(currentPage);
+      setServerFiles(res);
     } catch (err) {
       console.error("clearIndexing error:", err);
-      toast.error("Gagal clear indexing.");
     }
-  }, []);
+  }, [currentPage]);
 
   return {
     serverFiles,
