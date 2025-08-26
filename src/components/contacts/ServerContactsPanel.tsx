@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import type { ContactServer, Contact } from "../../types/types";
 import { FiEdit, FiTrash2, FiSearch } from "react-icons/fi";
 import EditContactPopup from "./EditContactPopup";
-import { useContactsHandler } from "../../hooks/useContactsHandler";
 import Pagination from "../Pagination";
+import { formatNumberInput } from "../../utils/ContatcsHelper";
 
 type Props = {
   serverContacts: ContactServer;
@@ -47,8 +47,6 @@ const ServerContactsPanel: React.FC<Props> = ({
     isOpen: false,
     contact: null,
   });
-
-  const { formatNumberInput } = useContactsHandler(true);
 
   const openEditPopup = (contact: Contact) => setEditPopup({ isOpen: true, contact });
   const closeEditPopup = () => setEditPopup({ isOpen: false, contact: null });

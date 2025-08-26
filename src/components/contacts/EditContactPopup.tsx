@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FiUser, FiPhone } from "react-icons/fi";
 import type { Contact } from "../../types/types";
-import { useContactsHandler } from "../../hooks/useContactsHandler";
 import toast from "react-hot-toast";
+import { formatNumberEdit, formatNumberInput, validatePhoneNumber } from "../../utils/ContatcsHelper";
 
 type Props = {
   contact: Contact;
@@ -13,7 +13,6 @@ type Props = {
 };
 
 const EditContactPopup: React.FC<Props> = ({ contact, onClose, onSave }) => {
-  const { formatNumberEdit, formatNumberInput, validatePhoneNumber } = useContactsHandler(true);
   const [name, setName] = useState(contact.name);
   const [number, setNumber] = useState(formatNumberEdit(contact.number));
   const [status, setStatus] = useState(contact.status || "active");
