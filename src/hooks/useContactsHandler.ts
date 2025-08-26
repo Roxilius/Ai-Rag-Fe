@@ -48,7 +48,7 @@ export function useContactsHandler() {
       console.error("updateContact error:", err);
     }
   }, [fetchContacts]);
-
+  // test
   const handleDelete = useCallback(async (id: string) => {
     try {
       await deleteContact([id]);
