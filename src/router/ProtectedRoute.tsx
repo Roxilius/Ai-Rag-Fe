@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 interface TokenPayload {
-  role: "user" | "admin";
+  role: string;
   exp: number;
 }
 
@@ -25,15 +25,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   try {
     const decoded = jwtDecode<TokenPayload>(token);
 
-    // Cek token expired
     if (decoded.exp * 1000 < Date.now()) {
       Cookies.remove("token");
       return <Navigate to="/login" replace />;
     }
 
-    // Role validation
     if (decoded.role === "user") {
-      // user hanya boleh akses /chat
       if (location.pathname !== "/chat") {
         toast.dismiss();
         toast.error("And tidak memiliki akses");
@@ -41,7 +38,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       }
     }
 
-    // kalau admin => bebas
     return children;
   } catch (err) {
     console.error("Invalid token:", err);
