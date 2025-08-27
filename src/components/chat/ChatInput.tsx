@@ -24,13 +24,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
   }, [text]);
 
   return (
-    <div className="flex items-end gap-2 px-3 py-2 sm:px-4 bg-white border-t border-gray-300 w-full max-w-screen">
+    <div className="flex items-end gap-2 px-3 py-2 sm:px-4 bg-white/90 rounded-xl border border-gray-200 shadow-sm">
       <textarea
         ref={textareaRef}
         rows={1}
-        className="text-base flex-1 w-full resize-none overflow-hidden px-3 py-2 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#ED1C24] max-h-40 leading-relaxed"
+        className="text-base flex-1 resize-none overflow-hidden px-3 py-2 border border-gray-300 text-black rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ED1C24] max-h-40 leading-relaxed scrollbar-thin scrollbar-thumb-gray-300"
         style={{ fontSize: "16px" }}
-        placeholder="Tanya AI..."
+        placeholder="Tulis pesan..."
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
@@ -42,7 +42,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
       />
 
       <button
-        className="flex items-center justify-center p-2 sm:p-2.5 bg-[#ED1C24] text-white rounded-md hover:bg-red-600 transition-colors duration-200"
+        className="flex items-center justify-center p-2 sm:p-2.5 bg-[#ED1C24] text-white rounded-xl shadow-md hover:bg-red-600 active:scale-95 transition-all duration-200"
         onClick={handleSend}
         aria-label="Kirim"
       >

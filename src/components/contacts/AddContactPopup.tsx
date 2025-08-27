@@ -3,15 +3,17 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FiUser, FiPhone } from "react-icons/fi";
 import type { Contact } from "../../types/types";
-import { useContactsHandler } from "../../hooks/useContactsHandler";
 import toast from "react-hot-toast";
+import { formatNumberInput, validatePhoneNumber } from "../../utils/ContatcsHelper";
 
-type Props = { handleAddContact: (contact: Contact) => void };
+type Props = { 
+  handleAddContact: (contact: Contact) => void
+  close: ()=> void;
+};
 
-const AddContactPopup: React.FC<Props> = ({ handleAddContact }) => {
+const AddContactPopup: React.FC<Props> = ({ handleAddContact, close }) => {
   const [name, setName] = useState("");
   const [number, setNumber] = useState("+62 ");
-  const { formatNumberInput, validatePhoneNumber } = useContactsHandler(true);
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
@@ -92,7 +94,10 @@ const AddContactPopup: React.FC<Props> = ({ handleAddContact }) => {
 
       {/* Tombol Simpan */}
       <motion.button
-        onClick={onSubmit}
+        onClick={ () => {
+          onSubmit();
+          close();
+        }}
         whileTap={{ scale: 0.97 }}
         whileHover={{ scale: 1.02 }}
         className="w-full py-2.5 text-sm bg-gradient-to-r from-blue-500 via-purple-500 

@@ -16,7 +16,7 @@ const ContactHandlerPage: React.FC = () => {
     handleAddContact,
     handleEditContact,
     handleDelete,
-  } = useContactsHandler(true);
+  } = useContactsHandler();
 
   const [confirmPopup, setConfirmPopup] = useState<{
     isOpen: boolean;
@@ -41,6 +41,10 @@ const ContactHandlerPage: React.FC = () => {
   const closeConfirmPopup = useCallback(() => {
     setConfirmPopup((prev) => ({ ...prev, isOpen: false }));
   }, []);
+
+  const closeAddPopup = () =>{
+    setIsAddPopupOpen(false);
+  }
 
   const filteredContacts =
     serverContacts?.data?.filter((c) =>
@@ -124,7 +128,7 @@ const ContactHandlerPage: React.FC = () => {
               transition={{ duration: 0.25 }}
               className="w-full max-w-md mx-3"
             >
-              <AddContactPopup handleAddContact={handleAddContact} />
+              <AddContactPopup handleAddContact={handleAddContact} close={closeAddPopup}/>
               <button
                 onClick={() => setIsAddPopupOpen(false)}
                 className="mt-3 w-full py-2 text-sm rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700"
