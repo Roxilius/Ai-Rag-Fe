@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { askAI, uploadFile, indexingFiles, deleteFile } from "../api/api";
 import type { Message } from "../types/types";
 import { useAuth } from "./useAuth";
+import { v4 as uuidv4 } from "uuid";
 
 export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -19,7 +20,7 @@ export function useChat() {
     }
     setMessages((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), sender: "ai", content: text },
+      { id: uuidv4(), sender: "ai", content: text },
     ]);
     setCurrentAiMessage("");
     setIsTyping(false);
@@ -30,7 +31,7 @@ export function useChat() {
     async (message: string) => {
       setMessages((prev) => [
         ...prev,
-        { id: crypto.randomUUID(), sender: "user", content: message },
+        { id: uuidv4(), sender: "user", content: message },
       ]);
       setIsTyping(true);
       setCurrentAiMessage("");
@@ -47,7 +48,7 @@ export function useChat() {
         setMessages((prev) => [
           ...prev,
           {
-            id: crypto.randomUUID(),
+            id: uuidv4(),
             sender: "ai",
             content: "Maaf, terjadi error saat menghubungi server.",
           },
