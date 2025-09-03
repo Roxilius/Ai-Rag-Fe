@@ -33,9 +33,9 @@ docker_build:
     - docker build -t $IMAGE_NAME:latest .
     - docker push $IMAGE_NAME:latest
   only:
-    - main   # hanya jalan di branch main (bisa disesuaikan)
+    - main
 
-# Stage 3: Deploy ke VPS
+# Stage 3: Deploy ke VPS dengan docker-compose
 deploy_vps:
   stage: deploy
   image: alpine:latest
@@ -47,11 +47,10 @@ deploy_vps:
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST "
+        cd ~/projects && \
         docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD && \
-        docker pull $IMAGE_NAME:latest && \
-        docker stop rag-frontend || true && \
-        docker rm rag-frontend || true && \
-        docker run -d --name rag-frontend -p 80:80 $IMAGE_NAME:latest
+        docker compose pull && \
+        docker compose up -d
       "
   only:
     - main
