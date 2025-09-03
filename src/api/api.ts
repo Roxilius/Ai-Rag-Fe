@@ -51,6 +51,7 @@ export async function askAI(params: AskAIParams): Promise<Response> {
 export async function getUserInfo(): Promise<User> {
   try {
     const res = await api.get("/auth/user-info", { headers: getAuthHeaders() });
+    console.log(res.data)
     return res.data.data;
   } catch (error) {
     handleApiError(error, "Gagal mengambil informasi user.");
