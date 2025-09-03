@@ -1,0 +1,57 @@
+stages:
+  - build
+  - docker
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  IMAGE_NAME: adminjogetids/rag-frontend
+
+before_script:
+  - echo "🚀 Start CI/CD pipeline"
+
+# Stage 1: Build React App
+build_app:
+  stage: build
+  image: node:20-alpine
+  script:
+    - corepack enable && corepack prepare pnpm@latest --activate
+    - pnpm install --frozen-lockfile || pnpm install --force
+    - pnpm run build
+  artifacts:
+    paths:
+      - dist
+
+# Stage 2: Build & Push Docker Image
+docker_build:
+  stage: docker
+  image: docker:24.0.5
+  services:
+    - docker:dind
+  script:
+    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    - docker build -t $IMAGE_NAME:latest .
+    - docker push $IMAGE_NAME:latest
+  only:
+    - main   # hanya jalan di branch main (bisa disesuaikan)
+
+# Stage 3: Deploy ke VPS
+deploy_vps:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh
+  script:
+    - echo "🔑 Setup SSH"
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST "
+        docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD && \
+        docker pull $IMAGE_NAME:latest && \
+        docker stop rag-frontend || true && \
+        docker rm rag-frontend || true && \
+        docker run -d --name rag-frontend -p 80:80 $IMAGE_NAME:latest
+      "
+  only:
+    - main

@@ -20,7 +20,7 @@ COPY . .
 RUN pnpm run build
 
 # Stage 2: Serve dengan Nginx
-FROM nginx:alpine
+FROM nginx:stable-alpine3.21
 
 # Hapus konfigurasi default nginx
 RUN rm /etc/nginx/conf.d/default.conf
