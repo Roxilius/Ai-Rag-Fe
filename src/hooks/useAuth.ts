@@ -8,6 +8,7 @@ import Cookies from "js-cookie";
 
 export function useAuth() {
   const navigate = useNavigate();
+  const [userDetail, setUserDetail] = useState<User | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -36,7 +37,6 @@ export function useAuth() {
     };
   }, []);
 
-  const [userDetail, setUserDetail] = useState<User | null>(null);
 
   const handleCredentialResponse = useCallback(
     async (response: CredentialResponse) => {
