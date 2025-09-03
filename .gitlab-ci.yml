@@ -47,7 +47,7 @@ deploy_vps:
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST "
-        cd ~/projects && \
+        cd ~/project && \
         docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD && \
         docker compose pull frontend && \
         docker compose up -d frontend
