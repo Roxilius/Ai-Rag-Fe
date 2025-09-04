@@ -4,7 +4,7 @@ import Cookies from "js-cookie";
 import { GoogleLogin } from "@react-oauth/google";
 import toast from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
-
+import logo from "../assets/logo.webp";
 const LoginPage: React.FC = () => {
   const {handleCredentialResponse} = useAuth()
   
@@ -23,7 +23,7 @@ const LoginPage: React.FC = () => {
       >
         {/* Logo */}
         <motion.img
-          src="https://d2oi1rqwb0pj00.cloudfront.net/community/nio_1744103568525_100.webp"
+          src={logo}
           alt="IDStar Logo"
           className="w-24 sm:w-32 mx-auto mb-6"
           initial={{ opacity: 0, scale: 0.8 }}

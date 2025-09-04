@@ -1,6 +1,5 @@
 stages:
-  - build
-  - docker
+  - buil-docker
   - deploy
 
 variables:
@@ -10,21 +9,9 @@ variables:
 before_script:
   - echo "🚀 Start CI/CD pipeline"
 
-# Stage 1: Build React App
-build_app:
-  stage: build
-  image: node:20-alpine
-  script:
-    - corepack enable && corepack prepare pnpm@latest --activate
-    - pnpm install --frozen-lockfile || pnpm install --force
-    - pnpm run build
-  artifacts:
-    paths:
-      - dist
-
-# Stage 2: Build & Push Docker Image
+# Stage 1: Build & Push Docker Image
 docker_build:
-  stage: docker
+  stage: buil-docker
   image: docker:24.0.5
   services:
     - docker:dind
@@ -35,7 +22,7 @@ docker_build:
   only:
     - main
 
-# Stage 3: Deploy ke VPS dengan docker-compose
+# Stage 2: Deploy ke VPS dengan docker-compose
 deploy_vps:
   stage: deploy
   image: alpine:latest
