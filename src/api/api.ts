@@ -69,9 +69,8 @@ export async function verifLogin(navigate: NavigateFunction, idToken: string) {
     );
     console.log(res.data);
     const { success, data, message } = res.data;
-    if (success && data?.token && data?.user) {
+    if (success && data?.token) {
       Cookies.set("token", data.token);
-      Cookies.set("user", JSON.stringify(data.user));
       toast.dismiss();
       toast.success("Login berhasil!");
       navigate("/chat");
