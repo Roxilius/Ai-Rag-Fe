@@ -4,8 +4,13 @@ FROM node:20-alpine AS build
 # Set workdir di container
 WORKDIR /app
 
+# Build-time arguments
 ARG VITE_GOOGLE_CLIENT_ID
+ARG VITE_BASE_URL
+
+# Masukkan ke environment supaya Vite bisa baca
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+ENV VITE_BASE_URL=$VITE_BASE_URL
 
 # Install pnpm global
 RUN npm install -g pnpm@10
