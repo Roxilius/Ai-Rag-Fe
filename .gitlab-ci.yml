@@ -1,5 +1,5 @@
 stages:
-  - buil-docker
+  - build-docker
   - deploy
 
 variables:
@@ -11,13 +11,14 @@ before_script:
 
 # Stage 1: Build & Push Docker Image
 docker_build:
-  stage: buil-docker
+  stage: build-docker
   image: docker:24.0.5
   services:
     - docker:dind
   script:
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-    - docker build --build-arg VITE_GOOGLE_CLIENT_ID=686251401673-ae32kftfbkmi800fi44g6ob5dj4mfn6d.apps.googleusercontent.com --build-arg VITE_BASE_URL=/api -t $IMAGE_NAME:latest .
+    - docker build --build-arg VITE_GOOGLE_CLIENT_ID=686251401673-ae32kftfbkmi800fi44g6ob5dj4mfn6d.apps.googleusercontent.com 
+    - docker build --build-arg VITE_BASE_URL=/api -t $IMAGE_NAME:latest .
     - docker push $IMAGE_NAME:latest
   only:
     - main
