@@ -17,7 +17,9 @@ docker_build:
     - docker:dind
   script:
     - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-    - docker build --build-arg VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID --build-arg VITE_BASE_URL=/api -t $IMAGE_NAME:latest .
+    - docker build --build-arg VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID \
+      --build-arg VITE_BASE_URL=/api \
+      -t $IMAGE_NAME:latest .
     - docker push $IMAGE_NAME:latest
   only:
     - main
@@ -36,8 +38,8 @@ deploy_vps:
   script:
     - echo "🔑 Deploying to VPS"
     - ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST "
-        cd ~/project/ai-rag &&
-        docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD &&
-        docker pull $IMAGE_NAME:latest &&
-        docker compose up -d
+      cd ~/project/ai-rag &&
+      docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD &&
+      docker pull $IMAGE_NAME:latest &&
+      docker compose up -d frontend
       "
