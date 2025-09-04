@@ -4,6 +4,9 @@ FROM node:20-alpine AS build
 # Set workdir di container
 WORKDIR /app
 
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+
 # Install pnpm global
 RUN npm install -g pnpm@10
 
