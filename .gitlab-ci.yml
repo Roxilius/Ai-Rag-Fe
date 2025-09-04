@@ -38,6 +38,6 @@ deploy_vps:
     - ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST "
         cd ~/project/ai-rag &&
         docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD &&
-        docker compose pull $DOCKERHUB_USERNAME/$IMAGE_NAME:latest &&
+        docker compose pull $IMAGE_NAME:latest &&
         docker compose up -d
       "
