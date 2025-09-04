@@ -67,7 +67,7 @@ export async function verifLogin(navigate: NavigateFunction, idToken: string) {
         headers: { "Content-Type": "application/json" },
       }
     );
-
+    console.log(res.data);
     const { success, data, message } = res.data;
     if (success && data?.token && data?.user) {
       Cookies.set("token", data.token);
