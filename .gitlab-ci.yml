@@ -24,21 +24,39 @@ docker_build:
     - main
 
 # Stage 2: Deploy ke VPS dengan docker-compose
+# deploy_vps:
+#   stage: deploy
+#   image: alpine:latest
+#   before_script:
+#     - apk add --no-cache openssh
+#   script:
+#     - echo "🔑 Setup SSH"
+#     - mkdir -p ~/.ssh
+#     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+#     - chmod 600 ~/.ssh/id_rsa
+#     - ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST "
+#         cd ~/project && \
+#         docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD && \
+#         docker compose pull $IMAGE_NAME:latest && \
+#         docker compose up -d
+#       "
+#   only:
+#     - main    
 deploy_vps:
   stage: deploy
   image: alpine:latest
   before_script:
     - apk add --no-cache openssh
-  script:
-    - echo "🔑 Setup SSH"
     - mkdir -p ~/.ssh
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
+    - eval $(ssh-agent -s)
+    - ssh-add ~/.ssh/id_rsa
+  script:
+    - echo "🔑 Deploying to VPS"
     - ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST "
-        cd ~/project && \
-        docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD && \
-        docker compose pull $IMAGE_NAME:latest && \
+        cd ~/project/ai-rag &&
+        docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD &&
+        docker compose pull $IMAGE_NAME:latest &&
         docker compose up -d
       "
-  only:
-    - main
