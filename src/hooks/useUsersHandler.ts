@@ -54,9 +54,9 @@ export function useUsersHandler(isOpen: boolean) {
 
   // === Update User (Role) ===
   const handleUpdateUser = useCallback(
-    async (userId: string, roleId: string) => {
+    async (userId: string, roleId: string, chat : string) => {
       try {
-        await updateUser(userId, roleId);
+        await updateUser(userId, roleId, chat);
         await fetchUsers(); // refresh data setelah update
       } catch (err) {
         console.error("updateUser error:", err);

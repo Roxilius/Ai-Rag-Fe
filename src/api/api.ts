@@ -245,10 +245,11 @@ export const deleteUsers = async (ids: string[]): Promise<void> => {
 
 export const updateUser = async (
   userId: string,
-  roleId: string
+  roleId: string,
+  chat: string
 ): Promise<void> => {
   try {
-    const res = await api.put(`/users`,{ userId, roleId, },
+    const res = await api.put(`/users`,{ userId, roleId, chat},
       {
         headers: getAuthHeaders(),
       }

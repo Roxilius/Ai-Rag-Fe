@@ -56,6 +56,7 @@ export type ContactServer = {
 };
 
 export type User = {
+  chat?: string; 
   userId: string;
   picture?: string;
   email: string;

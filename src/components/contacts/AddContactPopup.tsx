@@ -19,7 +19,7 @@ const AddContactPopup: React.FC<Props> = ({ handleAddContact, close }) => {
     let value = e.target.value;
     if (!value.startsWith("+62")) value = "+62 ";
     const digits = value.slice(4).replace(/\D/g, "");
-    if (digits.length === 1 && digits[0] !== "8") return;
+    if (digits.length === 1 && !digits.startsWith("8")) return;
     setNumber(formatNumberInput(digits));
   };
 

@@ -122,8 +122,8 @@ const UsersHandlerPage: React.FC = () => {
         isOpen={isEditOpen}
         user={editUser}
         onClose={() => setIsEditOpen(false)}
-        onSave={(userId, roleId) => {
-          handleUpdateUser(userId, roleId);
+        onSave={(userId, roleId, chat) => {
+          handleUpdateUser(userId, roleId, chat);
           setIsEditOpen(false);
           setEditUser(null);
         }}

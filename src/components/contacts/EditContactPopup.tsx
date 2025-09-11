@@ -4,7 +4,11 @@ import { motion } from "framer-motion";
 import { FiUser, FiPhone } from "react-icons/fi";
 import type { Contact } from "../../types/types";
 import toast from "react-hot-toast";
-import { formatNumberEdit, formatNumberInput, validatePhoneNumber } from "../../utils/ContatcsHelper";
+import {
+  formatNumberEdit,
+  formatNumberInput,
+  validatePhoneNumber,
+} from "../../utils/ContatcsHelper";
 
 type Props = {
   contact: Contact;
@@ -21,13 +25,14 @@ const EditContactPopup: React.FC<Props> = ({ contact, onClose, onSave }) => {
     let value = e.target.value;
     if (!value.startsWith("+62")) value = "+62 ";
     const digits = value.slice(4).replace(/\D/g, "");
-    if (digits.length === 1 && digits[0] !== "8") return;
+    if (digits.length === 1 && !digits.startsWith("8")) return;
     setNumber(formatNumberInput(digits));
   };
 
   const handleSave = () => {
     if (!name.trim()) return toast.error("Nama tidak boleh kosong.");
-    if (!validatePhoneNumber(number)) return toast.error("Nomor telepon tidak valid.");
+    if (!validatePhoneNumber(number))
+      return toast.error("Nomor telepon tidak valid.");
     onSave({
       ...contact,
       name: name.trim(),
@@ -54,7 +59,10 @@ const EditContactPopup: React.FC<Props> = ({ contact, onClose, onSave }) => {
         <div className="space-y-4">
           {/* Nama */}
           <div className="relative">
-            <FiUser className="absolute top-3.5 left-3 text-gray-400" size={18} />
+            <FiUser
+              className="absolute top-3.5 left-3 text-gray-400"
+              size={18}
+            />
             <input
               type="text"
               value={name}
@@ -67,7 +75,10 @@ const EditContactPopup: React.FC<Props> = ({ contact, onClose, onSave }) => {
 
           {/* Nomor */}
           <div className="relative">
-            <FiPhone className="absolute top-3.5 left-3 text-gray-400" size={18} />
+            <FiPhone
+              className="absolute top-3.5 left-3 text-gray-400"
+              size={18}
+            />
             <input
               type="text"
               value={number}
@@ -80,16 +91,18 @@ const EditContactPopup: React.FC<Props> = ({ contact, onClose, onSave }) => {
 
           {/* Status */}
           <div>
-            <label className="block text-gray-600 text-sm mb-1">Status</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full p-3 text-sm sm:text-base border border-gray-200 rounded-xl 
+            <label className="block text-gray-600 text-sm mb-1">
+              Status
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full p-3 text-sm sm:text-base border border-gray-200 rounded-xl 
                          focus:ring-2 focus:ring-purple-100 focus:border-purple-300"
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </label>
           </div>
         </div>
 

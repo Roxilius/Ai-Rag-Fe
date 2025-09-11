@@ -11,7 +11,6 @@ type Props = {
   totalPages: number;
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   onEdit: (role: { id: string; name: string; status: string }) => void;
-  onUpdate: (id: string, name: string, status: string) => void;
 };
 
 const listVariants = {
