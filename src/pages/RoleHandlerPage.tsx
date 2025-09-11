@@ -84,8 +84,10 @@ const RoleHandlerPage: React.FC = () => {
           currentPage={currentPage}
           totalPages={totalPages}
           setCurrentPage={setCurrentPage}
-          onEdit={(role) => setEditRole(role)}
-          onUpdate={handleUpdateRole}
+          onEdit={(role) => {
+            setEditRole(role)
+            handleUpdateRole(role.id, role.name, role.status);
+          }}
         />
       </motion.div>
 
