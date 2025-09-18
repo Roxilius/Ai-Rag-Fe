@@ -1,15 +1,18 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { useCallback, useEffect, useState } from "react";
-import type { Sheets } from "../types/types";
+import type { Pagination, Sheets } from "../types/types";
 import { getSheets, indexSheets } from "../api/api";
 
 export function useSheetsHandler(isOpen: boolean) {
-  const [sheets, setSheets] = useState<Sheets[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [sheets, setSheets] = useState<{ sheets: Sheets[]; pagination: Pagination }>();
   const [isLoadingSheets, setIsLoadingSheets] = useState(false);
   const [selectedSheets, setSelectedSheets] = useState<Sheets[]>([]);
   const [selectedForIndexing, setSelectedForIndexing] = useState<Set<string>>(
     new Set()
   );
+
+  const totalPages = sheets?.pagination?.totalPages || 1;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -18,7 +21,7 @@ export function useSheetsHandler(isOpen: boolean) {
     const fetchSheets = async () => {
       setIsLoadingSheets(true);
       try {
-        const res = await getSheets();
+        const res = await getSheets(currentPage);
         if (!controller.signal.aborted) {
           setSheets(res);
         }
@@ -35,12 +38,12 @@ export function useSheetsHandler(isOpen: boolean) {
 
     fetchSheets();
     return () => controller.abort();
-  }, [isOpen]);
+  }, [isOpen, currentPage]);
 
   const toggleSheetsSelection = useCallback(
     (id: string) => {
       if (!sheets) return;
-      const sheet = sheets?.find((f) => String(f.id) === id);
+      const sheet = sheets.sheets?.find((f) => String(f.id) === id);
       if (!sheet || sheet.name.startsWith("_indexed")) return;
 
       setSelectedForIndexing((prev) => {
@@ -72,6 +75,9 @@ export function useSheetsHandler(isOpen: boolean) {
     selectedSheets,
     selectedForIndexing,
     isLoadingSheets,
-    handleIndexing
+    handleIndexing,
+    setCurrentPage,
+    currentPage,
+    totalPages
   } as const;
 }

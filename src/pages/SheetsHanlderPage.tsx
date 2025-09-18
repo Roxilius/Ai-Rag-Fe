@@ -8,6 +8,7 @@ import SheetsHeader from "../components/sheets/SheetsHeader";
 import SheetsSearchFilter from "../components/sheets/SheetsSearchFilter";
 import SheetsList from "../components/sheets/SheetsList";
 import { useFileHandler } from "../hooks/useFileHandler";
+import Pagination from "../components/Pagination";
 
 const SheetshandlerPage: React.FC = () => {
   const {
@@ -17,6 +18,9 @@ const SheetshandlerPage: React.FC = () => {
     isLoadingSheets,
     handleIndexing,
     handleCancel,
+    currentPage,
+    setCurrentPage,
+    totalPages
   } = useSheetsHandler(true);
 
   const {handleClearIndexing} = useFileHandler(true);
@@ -43,9 +47,8 @@ const SheetshandlerPage: React.FC = () => {
     setConfirmPopup((prev) => ({ ...prev, isOpen: false }));
   }, []);
 
-  // Filter & search logic
   const filteredSheets = useMemo(() => {
-    return sheets.filter((s) => {
+    return sheets?.sheets.filter((s) => {
       const isIndexed = s.name.startsWith("_indexed");
       if (filter === "indexed" && !isIndexed) return false;
       if (filter === "notIndexed" && isIndexed) return false;
@@ -79,11 +82,15 @@ const SheetshandlerPage: React.FC = () => {
 
       <div className="w-full max-w-5xl">
         <SheetsList
-          sheets={filteredSheets}
+          sheets={filteredSheets? filteredSheets : []}
           selectedForIndexing={selectedForIndexing}
           isLoading={isLoadingSheets}
           onToggle={toggleSheetsSelection}
         />
+      </div>
+
+      <div className="mt-3">
+        <Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
       </div>
 
       {/* POPUP KONFIRMASI */}

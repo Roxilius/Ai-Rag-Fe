@@ -7,6 +7,7 @@ import type {
   Contact,
   ContactServer,
   FileServer,
+  Pagination,
   Response,
   Role,
   Roles,
@@ -317,17 +318,28 @@ export const updateRole = async (role: {
   }
 };
 
-export const getSheets = async (): Promise<Sheets[]> => {
+export const getSheets = async (
+  page: number,
+  limit: number = 10
+): Promise<{ sheets: Sheets[]; pagination: Pagination }> => {
   try {
     const res = await api.get(`/sheets/files`, {
       headers: getAuthHeaders(),
+      params: { page, limit },
     });
-    console.log("Sheets response:", res.data.files);
-    return res.data.files as Sheets[];
+
+    console.log("Sheets response:", res.data.data);
+
+    return {
+      sheets: res.data.data as Sheets[],
+      pagination: res.data.pagination, // ambil info pagination juga
+    };
   } catch (error) {
     handleApiError(error, "Gagal mengambil sheets list.");
+    throw error;
   }
 };
+
 
 export const indexSheets = async (clearAll: boolean, ids?: string[]): Promise<void> => {
   try {
