@@ -121,7 +121,7 @@ const FilehandlerPage: React.FC = () => {
             }}
             className="flex-1 px-3 py-2 rounded-lg bg-blue-600 text-white text-xs sm:text-sm font-medium shadow hover:bg-blue-700 transition"
           >
-            Indexing Biasa
+            Append Indexing
           </button>
           <button
             onClick={() => {
@@ -130,7 +130,7 @@ const FilehandlerPage: React.FC = () => {
             }}
             className="flex-1 px-3 py-2 rounded-lg bg-red-600 text-white text-xs sm:text-sm font-medium shadow hover:bg-red-700 transition"
           >
-            Clear All Indexing
+            Reset All Indexing
           </button>
         </div>
       </ChoicePopup>

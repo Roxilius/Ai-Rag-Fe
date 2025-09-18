@@ -10,6 +10,7 @@ import type {
   Response,
   Role,
   Roles,
+  Sheets,
   User,
   Users,
 } from "../types/types";
@@ -315,3 +316,30 @@ export const updateRole = async (role: {
     handleApiError(error, "Gagal memperbarui role.");
   }
 };
+
+export const getSheets = async (): Promise<Sheets[]> => {
+  try {
+    const res = await api.get(`/sheets/files`, {
+      headers: getAuthHeaders(),
+    });
+    console.log("Sheets response:", res.data.files);
+    return res.data.files as Sheets[];
+  } catch (error) {
+    handleApiError(error, "Gagal mengambil sheets list.");
+  }
+};
+
+export const indexSheets = async (clearAll: boolean, ids?: string[]): Promise<void> => {
+  try {
+    alert(ids);
+    const res = await api.post(`/sheets/index`, {
+      clearAll: clearAll,
+      fileIds: ids
+    }, {
+      headers: getAuthHeaders(),
+    });
+    toast.success(res.data?.message || "Berhasil mengindeks file drive.");
+  } catch (error) {
+    handleApiError(error, "Gagal indexing sheets!.");
+  }
+}

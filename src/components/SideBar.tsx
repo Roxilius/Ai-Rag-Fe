@@ -12,6 +12,7 @@ type Props = {
 const menu = [
   { name: "Chat", icon: <MessageSquare size={18} />, path: "/chat" },
   { name: "File Management", icon: <Folder size={18} />, path: "/files" },
+  { name: "Sheets Management", icon: <Folder size={18} />, path: "/sheets" },
   { name: "Contacts Management", icon: <Contact2 size={18} />, path: "/contacts" },
   { name: "Users Management", icon: <Users size={18} />, path: "/users" },
   { name: "Roles Management", icon: <Shield size={18} />, path: "/roles" },

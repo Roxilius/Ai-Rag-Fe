@@ -8,6 +8,7 @@ import FileHandlerPage from "../pages/FileHandlerPage";
 import ContactHandlerPage from "../pages/ContactHandlerPage";
 import UsersHandlerPage from "../pages/UsersHandlerPage";
 import RoleHandlerPage from "../pages/RoleHandlerPage";
+import SheetshandlerPage from "../pages/SheetsHanlderPage";
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +39,10 @@ export const router = createBrowserRouter([
       {
         path: "files",
         element: <FileHandlerPage />
+      },
+      {
+        path: "sheets",
+        element: <SheetshandlerPage />
       },
       {
         path: "contacts",

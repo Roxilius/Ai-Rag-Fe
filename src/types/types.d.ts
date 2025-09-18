@@ -85,3 +85,14 @@ export type Roles = {
   data: Role[];
   pagination: Pagination;
 };
+
+export type Sheets = {
+  id: string;
+  name: string;
+  mimeType: string;
+  createdTime: string;
+  modifiedTime: string;
+  status?: string;
+}
+
+export type FilterType = "all" | "indexed" | "notIndexed";
