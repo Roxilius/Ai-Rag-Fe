@@ -1,11 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { useCallback, useEffect, useState } from "react";
 import type { Pagination, Sheets } from "../types/types";
 import { getSheets, indexSheets } from "../api/api";
 
 export function useSheetsHandler(isOpen: boolean) {
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [sheets, setSheets] = useState<{ sheets: Sheets[]; pagination: Pagination }>();
+  const [sheets, setSheets] = useState<{
+    sheets: Sheets[];
+    pagination: Pagination;
+  }>();
   const [isLoadingSheets, setIsLoadingSheets] = useState(false);
   const [selectedSheets, setSelectedSheets] = useState<Sheets[]>([]);
   const [selectedForIndexing, setSelectedForIndexing] = useState<Set<string>>(
@@ -14,31 +16,24 @@ export function useSheetsHandler(isOpen: boolean) {
 
   const totalPages = sheets?.pagination?.totalPages || 1;
 
+  const fetchSheets = useCallback(async () => {
+    setIsLoadingSheets(true);
+    try {
+      const res = await getSheets(currentPage);
+      setSheets(res);
+    } catch (err) {
+      console.error("getFiles error:", err);
+    } finally {
+      setIsLoadingSheets(false);
+    }
+  }, [currentPage]);
+
   useEffect(() => {
     if (!isOpen) return;
     const controller = new AbortController();
-
-    const fetchSheets = async () => {
-      setIsLoadingSheets(true);
-      try {
-        const res = await getSheets(currentPage);
-        if (!controller.signal.aborted) {
-          setSheets(res);
-        }
-      } catch (err) {
-        if (!controller.signal.aborted) {
-          console.error("getFiles error:", err);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoadingSheets(false);
-        }
-      }
-    };
-
     fetchSheets();
     return () => controller.abort();
-  }, [isOpen, currentPage]);
+  }, [isOpen, currentPage, fetchSheets]);
 
   const toggleSheetsSelection = useCallback(
     (id: string) => {
@@ -48,7 +43,11 @@ export function useSheetsHandler(isOpen: boolean) {
 
       setSelectedForIndexing((prev) => {
         const next = new Set(prev);
-        next.has(id) ? next.delete(id) : next.add(id);
+        if (next.has(id)) {
+          next.delete(id);
+        } else {
+          next.add(id);
+        }
         return next;
       });
     },
@@ -63,9 +62,11 @@ export function useSheetsHandler(isOpen: boolean) {
   const handleIndexing = useCallback(
     async (clearAll: boolean) => {
       const ids = Array.from(selectedForIndexing);
-      indexSheets(clearAll, ids);
+      await indexSheets(clearAll, ids);
+      setSelectedForIndexing(new Set());
+      await fetchSheets();
     },
-    [selectedForIndexing]
+    [selectedForIndexing, fetchSheets]
   );
 
   return {
@@ -78,6 +79,7 @@ export function useSheetsHandler(isOpen: boolean) {
     handleIndexing,
     setCurrentPage,
     currentPage,
-    totalPages
+    totalPages,
+    refreshSheets: fetchSheets,
   } as const;
 }

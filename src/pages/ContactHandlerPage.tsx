@@ -1,4 +1,3 @@
-// ContactHandlerPage.tsx
 import React, { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useContactsHandler } from "../hooks/useContactsHandler";

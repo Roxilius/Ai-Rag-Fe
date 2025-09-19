@@ -1,4 +1,3 @@
-// hooks/useUsersHandler.ts
 import { useState, useCallback, useEffect } from "react";
 import { getUsers, deleteUsers, updateUser } from "../api/api";
 import type { Users } from "../types/types";

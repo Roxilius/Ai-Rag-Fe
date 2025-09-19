@@ -49,17 +49,7 @@ export async function askAI(params: AskAIParams): Promise<Response> {
   }
 }
 
-// --------------------- User ---------------------
-export async function getUserInfo(): Promise<User> {
-  try {
-    const res = await api.get("/auth/user-info", { headers: getAuthHeaders() });
-    console.log(res.data)
-    return res.data.data;
-  } catch (error) {
-    handleApiError(error, "Gagal mengambil informasi user.");
-  }
-}
-
+// --------------------- Auth ---------------------
 export async function verifLogin(navigate: NavigateFunction, idToken: string) {
   try {
     const res = await api.post(
@@ -221,6 +211,16 @@ export const updateContact = async (contact: Contact): Promise<void> => {
 };
 
 // === Users ===
+export async function getUserInfo(): Promise<User> {
+  try {
+    const res = await api.get("/auth/user-info", { headers: getAuthHeaders() });
+    console.log(res.data);
+    return res.data.data;
+  } catch (error) {
+    handleApiError(error, "Gagal mengambil informasi user.");
+  }
+}
+
 export const getUsers = async (page: number): Promise<Users> => {
   try {
     const res = await api.get(`/users?page=${page}&limit=10`, {
@@ -251,7 +251,9 @@ export const updateUser = async (
   chat: string
 ): Promise<void> => {
   try {
-    const res = await api.put(`/users`,{ userId, roleId, chat},
+    const res = await api.put(
+      `/users`,
+      { userId, roleId, chat },
       {
         headers: getAuthHeaders(),
       }
@@ -262,8 +264,11 @@ export const updateUser = async (
   }
 };
 
-// === roles ===
-export const getRoles = async (page: number, status?: string): Promise<Roles> => {
+// === Roles ===
+export const getRoles = async (
+  page: number,
+  status?: string
+): Promise<Roles> => {
   try {
     const query = status ? `&status=${status}` : "";
     const res = await api.get(`/roles?page=${page}&limit=10${query}`, {
@@ -318,6 +323,7 @@ export const updateRole = async (role: {
   }
 };
 
+// === Drive ===
 export const getSheets = async (
   page: number,
   limit: number = 10
@@ -329,29 +335,31 @@ export const getSheets = async (
     });
 
     console.log("Sheets response:", res.data.data);
-
     return {
       sheets: res.data.data as Sheets[],
-      pagination: res.data.pagination, // ambil info pagination juga
+      pagination: res.data.pagination,
     };
   } catch (error) {
     handleApiError(error, "Gagal mengambil sheets list.");
-    throw error;
   }
 };
-
-
-export const indexSheets = async (clearAll: boolean, ids?: string[]): Promise<void> => {
+export const indexSheets = async (
+  clearAll: boolean,
+  ids?: string[]
+): Promise<void> => {
   try {
-    alert(ids);
-    const res = await api.post(`/sheets/index`, {
-      clearAll: clearAll,
-      fileIds: ids
-    }, {
-      headers: getAuthHeaders(),
-    });
+    const res = await api.post(
+      `/sheets/index`,
+      {
+        clearAll: clearAll,
+        fileIds: ids,
+      },
+      {
+        headers: getAuthHeaders(),
+      }
+    );
     toast.success(res.data?.message || "Berhasil mengindeks file drive.");
   } catch (error) {
     handleApiError(error, "Gagal indexing sheets!.");
   }
-}
+};

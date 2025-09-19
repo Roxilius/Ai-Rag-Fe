@@ -1,4 +1,3 @@
-// hooks/useContactsHandler.ts
 import { useState, useCallback, useEffect } from "react";
 import {
   getContacts,

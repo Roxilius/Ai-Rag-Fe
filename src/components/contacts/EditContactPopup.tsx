@@ -1,4 +1,3 @@
-// components/contacts/EditContactPopup.tsx
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FiUser, FiPhone } from "react-icons/fi";

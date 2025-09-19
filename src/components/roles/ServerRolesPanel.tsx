@@ -1,4 +1,3 @@
-// components/ServerRolesPanel.tsx
 import React from "react";
 import { motion } from "framer-motion";
 import type { Role } from "../../types/types";

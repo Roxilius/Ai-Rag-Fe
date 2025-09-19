@@ -30,11 +30,17 @@ const SheetsList: React.FC<SheetsListProps> = ({
   }
 
   if (sheets.length === 0) {
-    return <div className="text-center text-gray-500 py-10">Tidak ada sheets yang sesuai.</div>;
+    return (
+      <div className="text-center text-gray-500 py-10">
+        Tidak ada sheets yang sesuai.
+      </div>
+    );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    <div
+      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+    >
       {sheets.map((s) => (
         <SheetCard
           key={s.id}

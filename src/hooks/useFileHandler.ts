@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
-// hooks/useFileHandler.ts
 import { useCallback, useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import {
@@ -135,7 +133,11 @@ export function useFileHandler(isOpen: boolean) {
 
       setSelectedForIndexing((prev) => {
         const next = new Set(prev);
-        next.has(id) ? next.delete(id) : next.add(id);
+        if (next.has(id)) {
+          next.delete(id);
+        } else {
+          next.add(id);
+        }
         return next;
       });
     },

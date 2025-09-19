@@ -16,14 +16,16 @@ const SheetsHeader: React.FC<SheetsHeaderProps> = ({
   onStartIndexing,
   handleClearIndexing,
   openConfirmPopup,
-  closeConfirmPopup
+  closeConfirmPopup,
 }) => {
   return (
-    <div className="w-full max-w-5xl flex flex-col sm:flex-row justify-between items-center gap-3 mb-6">
+    <div
+      className="w-full max-w-5xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-6"
+    >
       <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
         Sheets Manager
       </h1>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {/* Tombol Cancel Selection */}
         <button
           onClick={onCancel}

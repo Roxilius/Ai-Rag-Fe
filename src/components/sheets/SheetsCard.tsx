@@ -38,7 +38,7 @@ const SheetCard: React.FC<SheetCardProps> = ({
     <motion.div
       key={id}
       whileHover={{ scale: isIndexed ? 1 : 1.02 }}
-      className={cardClasses}
+      className={`${cardClasses} min-h-[120px] flex flex-col justify-between`}
       onClick={handleClick}
     >
       <div className="flex items-center gap-3">

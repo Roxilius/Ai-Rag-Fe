@@ -20,10 +20,11 @@ const SheetshandlerPage: React.FC = () => {
     handleCancel,
     currentPage,
     setCurrentPage,
-    totalPages
+    totalPages,
+    refreshSheets,
   } = useSheetsHandler(true);
 
-  const {handleClearIndexing} = useFileHandler(true);
+  const { handleClearIndexing: clearIndexingApi } = useFileHandler(true);
 
   const [confirmPopup, setConfirmPopup] = useState<{
     isOpen: boolean;
@@ -58,11 +59,18 @@ const SheetshandlerPage: React.FC = () => {
     });
   }, [sheets, filter, search]);
 
+  const handleClearIndexing = useCallback(async () => {
+    await clearIndexingApi();
+    handleCancel();
+    setCurrentPage(1);
+    await refreshSheets();
+  }, [clearIndexingApi, handleCancel, setCurrentPage, refreshSheets]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="h-full w-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4 flex flex-col items-center"
+      className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 px-4 sm:px-6 lg:px-8 py-6 flex flex-col items-center"
     >
       <SheetsHeader
         selectedCount={selectedForIndexing.size}
@@ -82,7 +90,7 @@ const SheetshandlerPage: React.FC = () => {
 
       <div className="w-full max-w-5xl">
         <SheetsList
-          sheets={filteredSheets? filteredSheets : []}
+          sheets={filteredSheets ?? []}
           selectedForIndexing={selectedForIndexing}
           isLoading={isLoadingSheets}
           onToggle={toggleSheetsSelection}
@@ -90,7 +98,11 @@ const SheetshandlerPage: React.FC = () => {
       </div>
 
       <div className="mt-3">
-        <Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          setCurrentPage={setCurrentPage}
+        />
       </div>
 
       {/* POPUP KONFIRMASI */}
