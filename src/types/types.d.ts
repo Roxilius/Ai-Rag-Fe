@@ -2,6 +2,7 @@ export type Message = {
   id: string;
   sender: "user" | "ai";
   content: string;
+  attachments?: string[]
 };
 
 export type Data = {
@@ -13,11 +14,6 @@ export type Response = {
   success: boolean;
   message: string;
   data: Data;
-};
-
-export type AskAIParams = {
-  userId: string;
-  question: string;
 };
 
 export type FileType = {

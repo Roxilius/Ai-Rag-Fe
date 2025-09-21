@@ -6,22 +6,17 @@ import { useAuth } from "../hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 
 const ChatPage: React.FC = () => {
-  const {
-    messages,
-    isTyping,
-    currentAiMessage,
-    chatContainerRef,
-    handleSend,
-  } = useChat();
+  const { messages, isTyping, currentAiMessage, chatContainerRef, handleSend } =
+    useChat();
 
   const { userDetail } = useAuth();
 
   return (
-    <div className="flex flex-col h-full w-full bg-gray-100 rounded-xl shadow-lg overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-xl overflow-hidden">
       {/* Chat Area */}
       <motion.div
         ref={chatContainerRef}
-        className="flex flex-col-reverse flex-1 overflow-y-auto px-3 py-4 sm:px-5 gap-3 bg-white scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+        className="flex flex-col-reverse flex-1 overflow-y-auto px-4 py-5 sm:px-6 gap-4 bg-white scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
@@ -70,6 +65,7 @@ const ChatPage: React.FC = () => {
                 message={m.content}
                 sender={m.sender}
                 image={m.sender === "user" ? userDetail?.picture : ""}
+                attachments={m.attachments}
               />
             </motion.div>
           ))}
@@ -78,10 +74,10 @@ const ChatPage: React.FC = () => {
 
       {/* Input Area */}
       <motion.div
-        className="sticky bottom-0 bg-white/90 backdrop-blur-md border-t border-gray-200 p-2 sm:p-4 shadow-md"
-        initial={{ y: 60 }}
+        className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 sm:p-5 shadow-lg"
+        initial={{ y: 80 }}
         animate={{ y: 0 }}
-        transition={{ type: "spring", stiffness: 140, damping: 18 }}
+        transition={{ type: "spring", stiffness: 160, damping: 18 }}
       >
         <ChatInput onSend={handleSend} />
       </motion.div>

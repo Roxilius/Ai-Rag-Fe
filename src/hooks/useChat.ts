@@ -28,10 +28,10 @@ export function useChat() {
 
   // Kirim pesan
   const handleSend = useCallback(
-    async (message: string) => {
+    async (message: string, images: string[] = []) => {
       setMessages((prev) => [
         ...prev,
-        { id: uuidv4(), sender: "user", content: message },
+        { id: uuidv4(), sender: "user", content: message, attachments: images },
       ]);
       setIsTyping(true);
       setCurrentAiMessage("");
@@ -39,6 +39,7 @@ export function useChat() {
         const { success, data } = await askAI({
           userId: userDetail?.userId || "default",
           question: message,
+          images,
         });
         const full = success
           ? data.answer

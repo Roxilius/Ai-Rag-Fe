@@ -3,7 +3,6 @@ import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import type { NavigateFunction } from "react-router-dom";
 import type {
-  AskAIParams,
   Contact,
   ContactServer,
   FileServer,
@@ -37,9 +36,23 @@ function handleApiError(error: unknown, defaultMessage: string): never {
 }
 
 // --------------------- AI ---------------------
-export async function askAI(params: AskAIParams): Promise<Response> {
+export async function askAI({
+  userId,
+  question,
+  images = [],
+}: {
+  userId: string;
+  question: string;
+  images?: string[];
+}): Promise<Response> {
   try {
-    const res = await api.post<Response>("/ask", params, {
+    const payload = {
+      userId,
+      question,
+      images,
+    };
+
+    const res = await api.post<Response>("/ask", payload, {
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     });
     console.log(res.data);
