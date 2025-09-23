@@ -18,6 +18,7 @@ export const formatNumberEdit = (digits: string) => {
 
 export const validatePhoneNumber = (phone: string) => {
   return (
+    /^\+62 \d{3}-\d{4}-\d{3}$/.test(phone) ||
     /^\+62 \d{3}-\d{4}-\d{4}$/.test(phone) ||
     /^\+62 \d{3}-\d{4}-\d{5}$/.test(phone)
   );
