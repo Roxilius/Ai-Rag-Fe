@@ -16,13 +16,15 @@ docker_build:
   stage: docker_build
   image: docker:24.0.5
   services:
-    - docker:dind
+    - name: docker:dind
+      command: ["--tls=false"]
   script:
-    - docker build --pull --no-cache \
-      --build-arg VITE_GOOGLE_CLIENT_ID="$VITE_GOOGLE_CLIENT_ID" \
-      --build-arg VITE_BASE_URL="/api" \
-      -t $IMAGE_NAME:latest .
-    - docker save -o docker-image.tar $IMAGE_NAME:latest
+    - |
+      docker build --pull --no-cache \
+        --build-arg VITE_GOOGLE_CLIENT_ID="$VITE_GOOGLE_CLIENT_ID" \
+        --build-arg VITE_BASE_URL="/api" \
+        -t $IMAGE_NAME:latest .
+      - docker save -o docker-image.tar $IMAGE_NAME:latest
   artifacts:
     paths:
       - docker-image.tar
