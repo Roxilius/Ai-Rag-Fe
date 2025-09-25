@@ -73,7 +73,7 @@ docker_push:
 # Stage 4: Deploy ke VPS dengan docker-compose
 deploy_vps:
   stage: deploy
-  image: alpine:latest
+  image: alpine:3.19
   before_script:
     - apk add --no-cache openssh-client
     - mkdir -p ~/.ssh
